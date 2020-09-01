@@ -1,0 +1,193 @@
+plugins {
+    id 'java-library'
+    id 'jacoco'
+    id 'checkstyle'
+    id 'pmd'
+    id "nebula.lint" version "16.9.0"
+}
+
+repositories {
+    jcenter()
+    maven { url 'https://jitpack.io' }
+    maven { url "https://s3.eu-central-1.amazonaws.com/dynamodb-local-frankfurt/release" }
+
+}
+
+final def jacksonVersion = "2.11.2"
+final def jupiterVersion = "5.6.0"
+final def awsSdkVersion = "1.11.833"
+
+dependencies {
+
+    implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: awsSdkVersion) {
+        because("This service communicates with dynamo-db directly")
+    }
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-api-gateway', version: awsSdkVersion
+
+    implementation(group: 'com.amazonaws', name: 'aws-java-sdk-core', version: awsSdkVersion) {
+        because("It is used by our code directly")
+    }
+
+    implementation(group: 'com.amazonaws', name: 'aws-java-sdk-secretsmanager', version: awsSdkVersion) {
+        because("we need to read the API key")
+    }
+    implementation(group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1') {
+        because("It implements lambda handlers")
+    }
+    implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: '0.4.3'
+    implementation(group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta4') {
+        because "Because we use the library directly to define loggers in our code"
+    }
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-databind', version: jacksonVersion
+    implementation group: 'com.fasterxml.jackson.core', name: 'jackson-annotations', version: jacksonVersion
+
+    implementation(group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jacksonVersion)
+
+
+    testImplementation group: 'com.github.BIBSYSDEV', name: 'nva-testutils', version: '0.1.13'
+    testImplementation group: 'com.amazonaws', name: 'DynamoDBLocal', version: '1.12.0'
+    testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.3.3'
+    testImplementation group: 'io.cucumber', name: 'cucumber-java', version: '5.6.0'
+    testImplementation(group: 'io.cucumber', name: 'datatable', version: '3.3.1') {
+        because("it is transitive dependency and we use it directly")
+    }
+
+    testImplementation('org.zalando:problem:0.24.0') {
+        dependencies {
+            compileOnly(group: 'org.apiguardian', name: 'apiguardian-api', version: '1.1.0') {
+                because 'Dependency has maven scope provided'
+            }
+        }
+
+    }
+    testRuntimeOnly group: 'org.junit.jupiter', name: 'junit-jupiter-engine', version: jupiterVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: jupiterVersion
+    testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: jupiterVersion
+    testImplementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
+    gradleLint.ignore {
+        // gradleLint wants this to be testRuntimeOnly, but cucumber fails to run when this is not
+        // set to testImplementation.
+        testImplementation(group: 'io.cucumber', name: 'cucumber-picocontainer', version: '6.1.1') {
+            because("Dependency injection in cucumber glue code")
+        }
+    }
+}
+
+task copyNativeDeps(type: Copy) {
+    from(configurations.testImplementation) {
+        include "*.dylib"
+        include "*.so"
+        include "*.dll"
+    }
+    into 'build/dynamodb-local'
+}
+
+test.dependsOn copyNativeDeps
+test.doFirst {
+    systemProperty "java.library.path", 'build/dynamodb-local'
+}
+
+test {
+    useJUnitPlatform()
+    failFast = false
+    testLogging {
+        events('skipped', 'passed', 'failed')
+    }
+    final Map<String, String> envVariables = new HashMap<>()
+    envVariables.put("ALLOWED_ORIGIN", "*")
+    environment(envVariables)
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    reports {
+        xml.enabled true
+    }
+}
+
+pmd {
+    ruleSetConfig = rootProject.resources.text.fromFile('config/pmd/ruleset.xml')
+    ruleSets = []
+    ignoreFailures = false
+}
+
+checkstyle {
+    configFile = rootProject.resources.text.fromFile('config/checkstyle/checkstyle.xml').asFile()
+    showViolations = true
+}
+
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled false
+        html.enabled true
+        html.stylesheet rootProject.resources.text.fromFile('config/checkstyle/checkstyle-simple.xsl')
+    }
+}
+
+// jacoco configuration
+check.dependsOn jacocoTestCoverageVerification
+jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                counter = 'METHOD'
+                value = 'COVEREDRATIO'
+                minimum = 1.000
+            }
+        }
+        rule {
+            limit {
+                counter = 'CLASS'
+                value = 'COVEREDRATIO'
+                minimum = 1.000
+            }
+        }
+    }
+}
+
+// Cucumber configurations
+configurations.testImplementation.canBeResolved = true
+configurations {
+    cucumberRuntime {
+        extendsFrom testImplementation
+    }
+}
+
+task cucumber() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            systemProperties = ["java.library.path": 'build/dynamodb-local']
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            args = ['--plugin', 'pretty', '--glue', 'features', 'src/test/resources']
+        }
+    }
+}
+
+task debugCucumber() {
+    dependsOn assemble, compileTestJava
+    doLast {
+        javaexec {
+            main = "io.cucumber.core.cli.Main"
+            systemProperties = ["java.library.path": 'build/dynamodb-local']
+            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
+            // add an @runme tag to debug one or more cucumber tests
+            args = ['--plugin', 'pretty', '--glue', 'features', '--tags', '@runme', 'src/test/resources',]
+            debugOptions {
+                enabled = true
+                suspend = true
+                port = 5005
+                server = true
+            }
+        }
+    }
+}
+
+test.dependsOn(cucumber)
+
+gradleLint {
+    rules = ['all-dependency', 'duplicate-dependency-class', 'unused-exclude-by-dep']
+}
