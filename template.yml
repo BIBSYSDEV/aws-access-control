@@ -30,7 +30,7 @@ Resources:
       DefinitionBody:
         openapi: 3.0.1
         info:
-          title: NVA Roles and Users catalogue
+          title: Orestis testing
           description: Api for updating users and roles
           version: 1.0.0
         paths:
