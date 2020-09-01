@@ -99,8 +99,6 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         validate(user);
         checkUserDoesNotAlreadyExist(user);
         mapper.save(user.toUserDb());
-        mapper.transactionWrite(new TransactionWriteRequest().);
-        mapper.transactionLoad(new TransactionLoadRequest().)
     }
 
     @Override

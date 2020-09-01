@@ -31,6 +31,7 @@ dependencies {
         because("It implements lambda handlers")
     }
     implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: 'ecce16a7c0c'
+
     implementation(group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta4') {
         because "Because we use the library directly to define loggers in our code"
     }
@@ -89,6 +90,5 @@ test {
     final Map<String, String> envVariables = new HashMap<>()
     envVariables.put("ALLOWED_ORIGIN", "*")
     environment(envVariables)
-    finalizedBy jacocoTestReport
 }
 
