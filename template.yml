@@ -22,12 +22,72 @@ Globals:
 
 Resources:
 
-  ExternalApi:
+  RestApi:
     Type: AWS::Serverless::Api
     Properties:
       StageName: Prod
       EndpointConfiguration: REGIONAL
-
+      DefinitionBody:
+        openapi: 3.0.1
+        info:
+          title: Orestis testing API
+          description: Api for updating users and roles
+          version: 1.0.0
+        paths:
+          /users/{username}:
+            get:
+              summary: Gets an existing User
+              parameters:
+                - in: path
+                  name: username
+                  schema:
+                    type: string
+                  required: true
+              security:
+                - CognitoUserPool: [ ]
+              responses:
+                '200':
+                  description: Successful fetching of User. Returns the requested User
+                  content:
+                    "application/json":
+                      schema:
+                        $ref: '#/components/schemas/User'
+              x-amazon-apigateway-integration:
+                uri:
+                  Fn::Sub: arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${GetUserHandler.Arn}/invocations
+                responses: { }
+                httpMethod: POST
+                type: aws_proxy
+        components:
+          schemas:
+            Role:
+              properties:
+                type:
+                  type: string
+                rolename:
+                  type: string
+            User:
+              properties:
+                type:
+                  type: string
+                username:
+                  type: string
+                institution:
+                  type: string
+                roles:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/Role'
+          securitySchemes:
+            CognitoUserPool:
+              type: apiKey
+              name: Authorization
+              in: header
+              x-amazon-apigateway-authtype: cognito_user_pools
+              x-amazon-apigateway-authorizer:
+                type: cognito_user_pools
+                providerARNs:
+                  - !Ref CognitoAuthorizerArn
   UserRoleMappings:
     Type: AWS::DynamoDB::Table
     Properties:
@@ -57,70 +117,6 @@ Resources:
           Projection:
             ProjectionType: ALL
 
-  AddRoleHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: no.unit.nva.handlers.AddRoleHandler::handleRequest
-      Runtime: java11
-      MemorySize: 1408
-      Environment:
-        Variables:
-          ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersAndRolesTableName
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /roles
-            Method: post
-            RestApiId: !Ref ExternalApi
-
-  GetRoleHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: no.unit.nva.handlers.GetRoleHandler::handleRequest
-      Runtime: java11
-      MemorySize: 1408
-      Environment:
-        Variables:
-          ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersAndRolesTableName
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /roles/{role}
-            Method: get
-            RestApiId: !Ref ExternalApi
-  AddUserHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: no.unit.nva.handlers.AddUserHandler::handleRequest
-      Runtime: java11
-      MemorySize: 1408
-      Environment:
-        Variables:
-          ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersAndRolesTableName
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /users
-            Method: post
-            RestApiId: !Ref ExternalApi
 
   GetUserHandler:
     Type: AWS::Serverless::Function
@@ -142,46 +138,4 @@ Resources:
           Properties:
             Path: /users/{username}
             Method: get
-            RestApiId: !Ref ExternalApi
-  UpdateUserHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: no.unit.nva.handlers.UpdateUserHandler::handleRequest
-      Runtime: java11
-      MemorySize: 1408
-      Environment:
-        Variables:
-          ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref UsersAndRolesTableName
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /users/{username}
-            Method: put
-            RestApiId: !Ref ExternalApi
-  ListByInstitutionHandler:
-    Type: AWS::Serverless::Function
-    Properties:
-      CodeUri: .
-      Handler: no.unit.nva.handlers.ListByInstitutionHandler::handleRequest
-      Runtime: java11
-      MemorySize: 1408
-      Environment:
-        Variables:
-          ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersAndRolesTableName
-      Events:
-        ApiEvent:
-          Type: Api
-          Properties:
-            Path: /institutions/{institution}/users
-            Method: get
-            RestApiId: !Ref ExternalApi
+            RestApiId: !Ref RestApi
