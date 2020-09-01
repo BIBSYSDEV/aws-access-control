@@ -1,9 +1,5 @@
 plugins {
     id 'java-library'
-    id 'jacoco'
-    id 'checkstyle'
-    id 'pmd'
-    id "nebula.lint" version "16.9.0"
 }
 
 repositories {
@@ -34,7 +30,7 @@ dependencies {
     implementation(group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1') {
         because("It implements lambda handlers")
     }
-    implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: '0.4.3'
+    implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: 'ecce16a7c0c'
     implementation(group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta4') {
         because "Because we use the library directly to define loggers in our code"
     }
@@ -64,12 +60,9 @@ dependencies {
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-api', version: jupiterVersion
     testImplementation group: 'org.junit.jupiter', name: 'junit-jupiter-params', version: jupiterVersion
     testImplementation group: 'org.hamcrest', name: 'hamcrest', version: '2.2'
-    gradleLint.ignore {
-        // gradleLint wants this to be testRuntimeOnly, but cucumber fails to run when this is not
-        // set to testImplementation.
-        testImplementation(group: 'io.cucumber', name: 'cucumber-picocontainer', version: '6.1.1') {
-            because("Dependency injection in cucumber glue code")
-        }
+
+    testImplementation(group: 'io.cucumber', name: 'cucumber-picocontainer', version: '6.1.1') {
+        because("Dependency injection in cucumber glue code")
     }
 }
 
@@ -99,95 +92,3 @@ test {
     finalizedBy jacocoTestReport
 }
 
-jacocoTestReport {
-    reports {
-        xml.enabled true
-    }
-}
-
-pmd {
-    ruleSetConfig = rootProject.resources.text.fromFile('config/pmd/ruleset.xml')
-    ruleSets = []
-    ignoreFailures = false
-}
-
-checkstyle {
-    configFile = rootProject.resources.text.fromFile('config/checkstyle/checkstyle.xml').asFile()
-    showViolations = true
-}
-
-tasks.withType(Checkstyle) {
-    reports {
-        xml.enabled false
-        html.enabled true
-        html.stylesheet rootProject.resources.text.fromFile('config/checkstyle/checkstyle-simple.xsl')
-    }
-}
-
-// jacoco configuration
-check.dependsOn jacocoTestCoverageVerification
-jacocoTestCoverageVerification.dependsOn(jacocoTestReport)
-
-jacocoTestCoverageVerification {
-    violationRules {
-        rule {
-            limit {
-                counter = 'METHOD'
-                value = 'COVEREDRATIO'
-                minimum = 1.000
-            }
-        }
-        rule {
-            limit {
-                counter = 'CLASS'
-                value = 'COVEREDRATIO'
-                minimum = 1.000
-            }
-        }
-    }
-}
-
-// Cucumber configurations
-configurations.testImplementation.canBeResolved = true
-configurations {
-    cucumberRuntime {
-        extendsFrom testImplementation
-    }
-}
-
-task cucumber() {
-    dependsOn assemble, compileTestJava
-    doLast {
-        javaexec {
-            main = "io.cucumber.core.cli.Main"
-            systemProperties = ["java.library.path": 'build/dynamodb-local']
-            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
-            args = ['--plugin', 'pretty', '--glue', 'features', 'src/test/resources']
-        }
-    }
-}
-
-task debugCucumber() {
-    dependsOn assemble, compileTestJava
-    doLast {
-        javaexec {
-            main = "io.cucumber.core.cli.Main"
-            systemProperties = ["java.library.path": 'build/dynamodb-local']
-            classpath = configurations.cucumberRuntime + sourceSets.main.output + sourceSets.test.output
-            // add an @runme tag to debug one or more cucumber tests
-            args = ['--plugin', 'pretty', '--glue', 'features', '--tags', '@runme', 'src/test/resources',]
-            debugOptions {
-                enabled = true
-                suspend = true
-                port = 5005
-                server = true
-            }
-        }
-    }
-}
-
-test.dependsOn(cucumber)
-
-gradleLint {
-    rules = ['all-dependency', 'duplicate-dependency-class', 'unused-exclude-by-dep']
-}

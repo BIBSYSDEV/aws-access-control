@@ -49,6 +49,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
     }
 
     private String extractValidUserNameOrThrowException(RequestInfo requestInfo) throws BadRequestException {
+
         return Optional.of(requestInfo)
             .map(RequestInfo::getPathParameters)
             .map(map -> map.get(USERNAME_PATH_PARAMETER))
