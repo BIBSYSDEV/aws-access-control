@@ -60,7 +60,6 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     private static final Logger logger = LoggerFactory.getLogger(DatabaseServiceImpl.class);
     private static final String UPDATE_ROLE_DEBUG_MESSAGE = "Updating role: ";
     private final DynamoDBMapper mapper;
-    private AmazonDynamoDB dynamoDbClient;
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
