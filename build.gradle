@@ -67,6 +67,8 @@ dependencies {
     }
 }
 
+configurations.testImplementation.canBeResolved = true
+
 task copyNativeDeps(type: Copy) {
     from(configurations.testImplementation) {
         include "*.dylib"
