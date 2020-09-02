@@ -284,20 +284,20 @@ Resources:
                     - 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}'
                     - {"tableName": !Ref UsersAndRolesTableName }
         - PolicyName: IndexAccess
-            PolicyDocument:
-              Version: '2012-10-17'
-              Statement:
-                - Effect: Allow
-                  Action:
-                    - dynamodb:GetItem
-                    - dynamodb:Scan
-                    - dynamodb:Query
-                    - dynamodb:BatchGetItem
-                    - dynamodb:DescribeTable
-                  Resource:
-                    - !Sub
-                      - 'arn:aws:dynamodb:${ AWS::Region }:${ AWS::AccountId }:table/${tableName}/index/*'
-                      - { "tableName": !Ref UsersAndRolesTableName }
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:DescribeTable
+                Resource:
+                  - !Sub
+                    - 'arn:aws:dynamodb:${ AWS::Region }:${ AWS::AccountId }:table/${tableName}/index/*'
+                    - { "tableName": !Ref UsersAndRolesTableName }
 
   AddRoleHandler:
     Type: AWS::Serverless::Function
