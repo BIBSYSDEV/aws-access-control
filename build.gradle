@@ -11,10 +11,11 @@ repositories {
 
 final def jacksonVersion = "2.11.2"
 final def jupiterVersion = "5.6.0"
-final def awsSdkVersion = "1.11.833"
+final def awsSdkVersion = "1.11.852"
 
 dependencies {
 
+    compile group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: awsSdkVersion
     implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: awsSdkVersion) {
         because("This service communicates with dynamo-db directly")
     }

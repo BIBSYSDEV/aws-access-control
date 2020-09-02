@@ -1,0 +1,29 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "dynamodb:GetItem",
+        "dynamodb:PutItem",
+        "dynamodb:UpdateItem",
+        "dynamodb:Scan",
+        "dynamodb:Query",
+        "dynamodb:BatchGetItem",
+        "dynamodb:DescribeTable",
+        "sts:AssumeRole",
+        "sts:TagSession"
+      ],
+      "Resource": [
+        "arn:aws:dynamodb:eu-west-1:884807050265:table/OrestisTable"
+      ],
+      "Condition": {
+        "ForAllValues:StringEquals": {
+          "dynamodb:LeadingKeys": [
+            "USER#orestis"
+          ]
+        }
+      }
+    }
+  ]
+}
