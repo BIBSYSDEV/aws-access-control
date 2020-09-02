@@ -351,6 +351,7 @@ Resources:
             RestApiId: !Ref RestApi
 
   GetUserHandler:
+    DependsOn: LambdaRole
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -361,9 +362,7 @@ Resources:
         Variables:
           ALLOWED_ORIGIN: '*'
           USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
-      Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref UsersAndRolesTableName
+      Role: !GetAtt LambdaRole.Arn
       Events:
         ApiEvent:
           Type: Api
