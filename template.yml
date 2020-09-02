@@ -285,7 +285,7 @@ Resources:
                     - {"tableName": !Ref UsersAndRolesTableName }
                 Condition:
                   "ForAllValues:StringEquals":
-                    "dynamodb:LeadingKeys": [ "orestis" ]
+                    "dynamodb:LeadingKeys": [ "USER#orestis" ]
         - PolicyName: IndexAccess
           PolicyDocument:
             Version: '2012-10-17'
