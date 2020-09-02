@@ -36,6 +36,7 @@ public class DatabaseServiceTest extends DatabaseAccessor {
     private static final String SOME_INSTITUTION = "SomeInstitution";
     private static final String SOME_OTHER_ROLE = "SOME_OTHER_ROLE";
     private static final String SOME_OTHER_INSTITUTION = "Some other institution";
+    public static final String SOME_PUBLICATION_ID = "SomePublicationId";
     private DatabaseService db;
 
     @BeforeEach
@@ -266,6 +267,7 @@ public class DatabaseServiceTest extends DatabaseAccessor {
             .withRoles(createRoleList(roleName))
             .withInstitution(institution)
             .withUsername(username)
+            .withPublicationId(SOME_PUBLICATION_ID)
             .build();
     }
 

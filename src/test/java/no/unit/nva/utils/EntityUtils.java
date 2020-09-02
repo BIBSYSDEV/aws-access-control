@@ -18,6 +18,7 @@ public final class EntityUtils {
     public static final String SOME_ROLENAME = "SomeRole";
     public static final String SOME_INSTITUTION = "SomeInstitution";
     public static final String EMPTY_STRING = "";
+    public static final String SOME_PUBLICATION_ID = "SomePublicationId";
 
     /**
      * Creates a request for adding a user without a username. To be used with {@code handleRequest()} method.
@@ -97,6 +98,7 @@ public final class EntityUtils {
         throws InvalidEntryInternalException {
         return createUserWithRoleWithoutInstitution().copy()
             .withInstitution(SOME_INSTITUTION)
+            .withPublicationId(SOME_PUBLICATION_ID)
             .build();
     }
 

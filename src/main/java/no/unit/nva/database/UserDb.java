@@ -13,6 +13,7 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexHashKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBIndexRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBRangeKey;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTable;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -36,6 +37,10 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
     private String institution;
     private List<RoleDb> roles;
 
+
+
+    private String publicationId;
+
     public UserDb() {
         super();
     }
@@ -46,6 +51,7 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
         setInstitution(builder.institution);
         setRoles(builder.roles);
         setPrimaryHashKey(builder.primaryHashKey);
+        setPublicationId(builder.publicationId);
     }
 
     public static Builder newBuilder() {
@@ -150,6 +156,17 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
         return institution;
     }
 
+    @JacocoGenerated
+    @DynamoDBAttribute(attributeName = "publicationId")
+    public String getPublicationId() {
+        return publicationId;
+    }
+
+    @JacocoGenerated
+    public void setPublicationId(String publicationId) {
+        this.publicationId = publicationId;
+    }
+
     /**
      * Method for using only for DynamoDb mapper. Do not use. Use the builder instead.
      *
@@ -164,11 +181,11 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
         return newBuilder()
             .withUsername(this.username)
             .withInstitution(this.institution)
-            .withRoles(this.roles);
+            .withRoles(this.roles)
+            .withPublicationId(publicationId);
     }
 
     @Override
-    @JacocoGenerated
     public boolean equals(Object o) {
         if (this == o) {
             return true;
@@ -177,19 +194,16 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
             return false;
         }
         UserDb userDb = (UserDb) o;
-        return Objects.equals(getPrimaryHashKey(), userDb.getPrimaryHashKey())
-            && Objects.equals(getPrimaryRangeKey(), userDb.getPrimaryRangeKey())
-            && Objects.equals(getSearchByInstitutionHashKey(), userDb.getSearchByInstitutionHashKey())
-            && Objects.equals(getSearchByInstitutionRangeKey(), userDb.getSearchByInstitutionRangeKey())
-            && Objects.equals(getUsername(), userDb.getUsername())
-            && Objects.equals(getInstitution(), userDb.getInstitution())
-            && Objects.equals(getRoles(), userDb.getRoles());
+        return Objects.equals(getPrimaryHashKey(), userDb.getPrimaryHashKey()) &&
+            Objects.equals(getUsername(), userDb.getUsername()) &&
+            Objects.equals(getInstitution(), userDb.getInstitution()) &&
+            Objects.equals(getRoles(), userDb.getRoles()) &&
+            Objects.equals(getPublicationId(), userDb.getPublicationId());
     }
 
     @Override
-    @JacocoGenerated
     public int hashCode() {
-        return Objects.hash(getPrimaryHashKey(), getUsername(), getInstitution(), getRoles());
+        return Objects.hash(getPrimaryHashKey(), getUsername(), getInstitution(), getRoles(), getPublicationId());
     }
 
     public static final class Builder {
@@ -198,6 +212,7 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
         private String institution;
         private List<RoleDb> roles;
         private String primaryHashKey;
+        private String publicationId;
 
         private Builder() {
         }
@@ -220,6 +235,11 @@ public class UserDb extends DynamoEntry implements WithCopy<Builder>, WithType {
         public UserDb build() throws InvalidEntryInternalException {
             this.primaryHashKey = formatPrimaryHashKey();
             return new UserDb(this);
+        }
+
+        public Builder withPublicationId(String publicationId) {
+            this.publicationId = publicationId;
+            return this;
         }
 
         private String formatPrimaryHashKey() throws InvalidEntryInternalException {

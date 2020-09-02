@@ -36,6 +36,8 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
     private String username;
     private String institution;
 
+    private String publicationId;
+
     public UserDto() {
         roles = new ArrayList<>();
     }
@@ -44,6 +46,7 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
         setUsername(builder.username);
         setInstitution(builder.institution);
         setRoles(builder.roles);
+        setPublicationId(builder.publicationId);
     }
 
     /**
@@ -55,12 +58,12 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
      */
     public static UserDto fromUserDb(UserDb userDb) throws InvalidEntryInternalException {
 
-        UserDto.Builder userDto = new UserDto.Builder();
-        userDto
+        return new UserDto.Builder()
             .withUsername(userDb.getUsername())
             .withRoles(extractRoles(userDb))
-            .withInstitution(userDb.getInstitution());
-        return userDto.build();
+            .withInstitution(userDb.getInstitution())
+            .withPublicationId(userDb.getPublicationId())
+            .build();
     }
 
     /**
@@ -70,6 +73,21 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
      */
     public static Builder newBuilder() {
         return new Builder();
+    }
+
+    private static List<RoleDto> extractRoles(UserDb userDb) {
+        return Optional.ofNullable(userDb)
+            .stream()
+            .flatMap(userDb1 -> userDb1.getRoles().stream())
+            .map(attempt(RoleDto::fromRoleDb))
+            .map(attempt -> attempt.orElseThrow(UserDto::unexpectedException))
+            .collect(Collectors.toList());
+    }
+
+    /*This exception should not happen as a RoleDb should always convert to a RoleDto */
+    private static <T> IllegalStateException unexpectedException(Failure<T> failure) {
+        logger.error(ERROR_DUE_TO_INVALID_ROLE);
+        throw new IllegalStateException(failure.getException());
     }
 
     /**
@@ -82,7 +100,8 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
         UserDb.Builder userDb = UserDb.newBuilder()
             .withUsername(username)
             .withInstitution(institution)
-            .withRoles(createRoleDb());
+            .withRoles(createRoleDb())
+            .withPublicationId(publicationId);
 
         return userDb.build();
     }
@@ -136,7 +155,8 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
         return new Builder()
             .withUsername(username)
             .withInstitution(institution)
-            .withRoles(listRoles());
+            .withRoles(listRoles())
+            .withPublicationId(publicationId);
     }
 
     @Override
@@ -160,23 +180,18 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
         return Objects.hash(getUsername(), getInstitution(), getRoles());
     }
 
+    @JacocoGenerated
+    public String getPublicationId() {
+        return publicationId;
+    }
+
+    @JacocoGenerated
+    public void setPublicationId(String publicationId) {
+        this.publicationId = publicationId;
+    }
+
     private List<RoleDto> listRoles() {
         return new ArrayList<>(Optional.ofNullable(roles).orElse(Collections.emptyList()));
-    }
-
-    private static List<RoleDto> extractRoles(UserDb userDb) {
-        return Optional.ofNullable(userDb)
-            .stream()
-            .flatMap(userDb1 -> userDb1.getRoles().stream())
-            .map(attempt(RoleDto::fromRoleDb))
-            .map(attempt -> attempt.orElseThrow(UserDto::unexpectedException))
-            .collect(Collectors.toList());
-    }
-
-    /*This exception should not happen as a RoleDb should always convert to a RoleDto */
-    private static <T> IllegalStateException unexpectedException(Failure<T> failure) {
-        logger.error(ERROR_DUE_TO_INVALID_ROLE);
-        throw new IllegalStateException(failure.getException());
     }
 
     private List<RoleDb> createRoleDb() {
@@ -194,6 +209,7 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
         private String username;
         private String institution;
         private List<RoleDto> roles;
+        private String publicationId;
 
         private Builder() {
             roles = Collections.emptyList();
@@ -211,6 +227,11 @@ public class UserDto implements WithCopy<UserDto.Builder>, JsonSerializable, Val
 
         public Builder withRoles(List<RoleDto> roles) {
             this.roles = roles;
+            return this;
+        }
+
+        public Builder withPublicationId(String publicationId) {
+            this.publicationId = publicationId;
             return this;
         }
 

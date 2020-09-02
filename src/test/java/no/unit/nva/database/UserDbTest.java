@@ -32,6 +32,7 @@ public class UserDbTest extends DatabaseAccessor {
     public static final String SOME_USERNAME = "someUser";
     public static final String SOME_INSTITUTION = "SomeInstitution";
     public static final List<RoleDb> SAMPLE_ROLES = createSampleRoles();
+    public static final String SAMPLE_PUBLICATION_ID = "SomePublicationId";
 
     private UserDb dynamoFunctionalityTestUser;
     private UserDb sampleUser;
@@ -110,6 +111,7 @@ public class UserDbTest extends DatabaseAccessor {
             .withUsername(SOME_USERNAME)
             .withInstitution(SOME_INSTITUTION)
             .withRoles(SAMPLE_ROLES)
+            .withPublicationId(SAMPLE_PUBLICATION_ID)
             .build();
         DynamoDBMapper mapper = clientToLocalDatabase();
         mapper.save(insertedUser);
