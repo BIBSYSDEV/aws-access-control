@@ -283,6 +283,9 @@ Resources:
                   - !Sub
                     - 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}'
                     - {"tableName": !Ref UsersAndRolesTableName }
+                Condition:
+                  "ForAllValues:StringEquals":
+                    "dynamodb:LeadingKeys": [ "orestis" ]
         - PolicyName: IndexAccess
           PolicyDocument:
             Version: '2012-10-17'
@@ -298,9 +301,6 @@ Resources:
                   - !Sub
                     - 'arn:aws:dynamodb:${ AWS::Region }:${ AWS::AccountId }:table/${tableName}/index/*'
                     - { "tableName": !Ref UsersAndRolesTableName }
-                Condition:
-                  "ForAllValues:StringEquals" :
-                    "dynamodb:LeadingKeys": ["orestis"]
 
   AddRoleHandler:
     Type: AWS::Serverless::Function
