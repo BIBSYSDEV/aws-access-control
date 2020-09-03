@@ -263,7 +263,7 @@ Resources:
           - Effect: Allow
               Principal:
                 AWS: !GetAtt LambdaRole.Arn
-              Action:
+            Action:
                 - sts:TagSession
 
       Path: /
