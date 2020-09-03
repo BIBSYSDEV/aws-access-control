@@ -3,10 +3,10 @@ package no.unit.nva.handlers;
 import static java.util.function.Predicate.not;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
-import com.amazonaws.services.securitytoken.model.AssumedRoleUser;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -27,34 +27,42 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
     public static final int MIN_DURATION_SECONDS = 900;
     private final DatabaseService databaseService;
+    private final AWSSecurityTokenService stsClient;
 
     @JacocoGenerated
     public GetUserHandler() {
-        this(new Environment(), new DatabaseServiceImpl());
+        this(new Environment(),
+            new DatabaseServiceImpl(),
+            AWSSecurityTokenServiceClientBuilder.defaultClient()
+        );
     }
 
-    public GetUserHandler(Environment environment, DatabaseService databaseService) {
+    public GetUserHandler(Environment environment, DatabaseService databaseService, AWSSecurityTokenService stsClient) {
         super(Void.class, environment, defaultLogger());
         this.databaseService = databaseService;
+        this.stsClient = stsClient;
+    }
+
+    private static Logger defaultLogger() {
+        return LoggerFactory.getLogger(GetUserHandler.class);
     }
 
     @Override
     protected UserDto processInput(Void input, RequestInfo requestInfo, Context context)
         throws ApiGatewayException {
+
         String tableArn = environment.readEnv("TABLE_ARN");
-        String policy= IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
+        String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
         String username = extractValidUserNameOrThrowException(requestInfo);
         AssumeRoleRequest request = new AssumeRoleRequest()
             .withDurationSeconds(MIN_DURATION_SECONDS)
             .withTags(new Tag().withKey("username").withValue(username))
             .withTags(new Tag().withKey("tableArn").withValue(tableArn))
             .withRoleSessionName("mySession")
-        .withPolicy(policy);
+            .withPolicy(policy);
 
-        AssumeRoleResult result =
-            AWSSecurityTokenServiceClientBuilder.defaultClient()
-                .assumeRole(request);
-
+        AssumeRoleResult result = stsClient.assumeRole(request);
+        logger.info(result.toString());
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
         return databaseService.getUser(queryObject);
@@ -63,10 +71,6 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
     @Override
     protected Integer getSuccessStatusCode(Void input, UserDto output) {
         return HttpStatus.SC_OK;
-    }
-
-    private static Logger defaultLogger() {
-        return LoggerFactory.getLogger(GetUserHandler.class);
     }
 
     private String extractValidUserNameOrThrowException(RequestInfo requestInfo) throws BadRequestException {

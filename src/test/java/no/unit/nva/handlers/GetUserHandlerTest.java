@@ -6,9 +6,14 @@ import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -43,8 +48,16 @@ class GetUserHandlerTest extends HandlerTest {
     @BeforeEach
     public void init() {
         databaseService = createDatabaseServiceUsingLocalStorage();
-        getUserHandler = new GetUserHandler(envWithTableName, databaseService);
+        AWSSecurityTokenService stsService = mockStsService();
+        getUserHandler = new GetUserHandler(envWithTableName, databaseService,stsService);
         context = mock(Context.class);
+    }
+
+    private AWSSecurityTokenService mockStsService() {
+        AWSSecurityTokenService sts = mock(AWSSecurityTokenService.class);
+        when(sts.assumeRole(any(AssumeRoleRequest.class)))
+            .thenReturn(new AssumeRoleResult());
+        return sts;
     }
 
     @DisplayName("handleRequest returns User object with type \"User\"")
@@ -88,7 +101,7 @@ class GetUserHandlerTest extends HandlerTest {
         assertThat(actual, is(equalTo(expected)));
     }
 
-    @DisplayName("processInput() handles enccoded path parameters")
+    @DisplayName("processInput() handles encoded path parameters")
     @Test
     void processInputReturnsUserDtoWhenPathParameterContainsTheUsernameOfExistingUserEnc() throws ApiGatewayException {
 

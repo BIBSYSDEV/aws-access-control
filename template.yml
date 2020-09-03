@@ -272,13 +272,13 @@ Resources:
             Statement:
               - Effect: Allow
                 Action:
-                  - dynamodb:GetItem
-                  - dynamodb:PutItem
-                  - dynamodb:UpdateItem
-                  - dynamodb:Scan
-                  - dynamodb:Query
-                  - dynamodb:BatchGetItem
-                  - dynamodb:DescribeTable
+                 # - dynamodb:GetItem
+                 # - dynamodb:PutItem
+                 # - dynamodb:UpdateItem
+                  #- dynamodb:Scan
+                  #- dynamodb:Query
+                 # - dynamodb:BatchGetItem
+                 # - dynamodb:DescribeTable
                   - sts:AssumeRole
                   - sts:TagSession
                 Resource:
