@@ -245,6 +245,7 @@ Resources:
           Projection:
             ProjectionType: ALL
   AssumedRole:
+    DependsOn: LambdaRole
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
@@ -254,9 +255,14 @@ Resources:
             Principal:
               Service: lambda.amazonaws.com
             Action: sts:AssumeRole
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt LambdaRole.Arn
+            Action: sts:AssumeRole
       Path: /
 
   LambdaRole:
+    DependsOn: AssumedRole
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
