@@ -262,7 +262,6 @@ Resources:
       Path: /
 
   LambdaRole:
-    DependsOn: AssumedRole
     Type: AWS::IAM::Role
     Properties:
       AssumeRolePolicyDocument:
