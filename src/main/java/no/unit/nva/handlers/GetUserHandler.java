@@ -52,9 +52,11 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         throws ApiGatewayException {
 
         String tableArn = environment.readEnv("TABLE_ARN");
+        String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
         String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
         String username = extractValidUserNameOrThrowException(requestInfo);
         AssumeRoleRequest request = new AssumeRoleRequest()
+            .withRoleArn(roleArn)
             .withDurationSeconds(MIN_DURATION_SECONDS)
             .withTags(new Tag().withKey("username").withValue(username))
             .withTags(new Tag().withKey("tableArn").withValue(tableArn))

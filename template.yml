@@ -244,6 +244,18 @@ Resources:
               KeyType: RANGE
           Projection:
             ProjectionType: ALL
+  AssumedRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+            Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -265,45 +277,9 @@ Resources:
                   - logs:CreateLogGroup
                   - logs:CreateLogStream
                   - logs:PutLogEvents
-                Resource: "*"
-        - PolicyName: TableAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                 # - dynamodb:GetItem
-                 # - dynamodb:PutItem
-                 # - dynamodb:UpdateItem
-                  #- dynamodb:Scan
-                  #- dynamodb:Query
-                 # - dynamodb:BatchGetItem
-                 # - dynamodb:DescribeTable
                   - sts:AssumeRole
                   - sts:TagSession
-                Resource:
-                  - !Sub
-                    - 'arn:aws:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${tableName}'
-                    - {"tableName": !Ref UsersAndRolesTableName }
-                Condition:
-                  "ForAllValues:StringEquals":
-                    "dynamodb:LeadingKeys": [ "USER#orestis" ]
-        - PolicyName: IndexAccess
-          PolicyDocument:
-            Version: '2012-10-17'
-            Statement:
-              - Effect: Allow
-                Action:
-                  - dynamodb:GetItem
-                  - dynamodb:Scan
-                  - dynamodb:Query
-                  - dynamodb:BatchGetItem
-                  - dynamodb:DescribeTable
-                Resource:
-                  - !Sub
-                    - 'arn:aws:dynamodb:${ AWS::Region }:${ AWS::AccountId }:table/${tableName}/index/*'
-                    - { "tableName": !Ref UsersAndRolesTableName }
-
+                Resource: "*"
   AddRoleHandler:
     Type: AWS::Serverless::Function
     Properties:
@@ -371,6 +347,7 @@ Resources:
     DependsOn:
       - LambdaRole
       - UserRoleMappings
+      - AssumedRole
     Type: AWS::Serverless::Function
     Properties:
       CodeUri: .
@@ -381,6 +358,7 @@ Resources:
         Variables:
           ALLOWED_ORIGIN: '*'
           USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          ASSUMED_ROLE_ARN: !GetAtt AssumedRole.Arn
           TABLE_ARN: !GetAtt UserRoleMappings.Arn
       Role: !GetAtt LambdaRole.Arn
       Events:
