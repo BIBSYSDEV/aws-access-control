@@ -258,7 +258,14 @@ Resources:
           - Effect: Allow
             Principal:
               AWS: !GetAtt LambdaRole.Arn
-            Action: sts:AssumeRole
+            Action:
+              - sts:AssumeRole
+          - Effect: Allow
+              Principal:
+                AWS: !GetAtt LambdaRole.Arn
+              Action:
+                - sts:TagSession
+
       Path: /
 
   LambdaRole:
