@@ -6,24 +6,20 @@ import static no.unit.nva.database.DatabaseIndexDetails.SEARCH_USERS_BY_INSTITUT
 import static nva.commons.utils.JsonUtils.objectMapper;
 import static nva.commons.utils.attempt.Try.attempt;
 
+import com.amazonaws.auth.BasicSessionCredentials;
+import com.amazonaws.auth.STSSessionCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapperConfig;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBSaveExpression;
-import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBTransactionLoadExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
-import com.amazonaws.services.dynamodbv2.datamodeling.TransactionLoadRequest;
-import com.amazonaws.services.dynamodbv2.datamodeling.TransactionWriteRequest;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.dynamodbv2.model.ConditionalOperator;
-import com.amazonaws.services.dynamodbv2.model.ReturnValue;
-import com.amazonaws.services.dynamodbv2.model.UpdateItemRequest;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import no.unit.nva.database.interfaces.WithType;
 import no.unit.nva.exceptions.ConflictException;
@@ -59,20 +55,41 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     public static final String NOT_USED = "NOT_USED";
     private static final Logger logger = LoggerFactory.getLogger(DatabaseServiceImpl.class);
     private static final String UPDATE_ROLE_DEBUG_MESSAGE = "Updating role: ";
-    private final DynamoDBMapper mapper;
-    private AmazonDynamoDB dynamoDbClient;
+    private DynamoDBMapper mapper;
+    private final Environment environment;
+
+    private Function<STSSessionCredentialsProvider,AmazonDynamoDB> dynamoDBSupplier;
+
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
-        this(AmazonDynamoDBClientBuilder.defaultClient(), new Environment());
+        this(credentials->AmazonDynamoDBClientBuilder.defaultClient(),
+            null,
+            new Environment());
     }
 
-    public DatabaseServiceImpl(AmazonDynamoDB dynamoDbClient, Environment environment) {
-        this(createMapperOverridingHardCodedTableName(dynamoDbClient, environment));
+
+    public static STSSessionCredentialsProvider credentialsProvider(Credentials credentials){
+        final BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
+            credentials.getAccessKeyId(),
+            credentials.getSecretAccessKey(),
+            credentials.getSessionToken());
+
+        return new STSSessionCredentialsProvider(sessionCredentials);
     }
 
-    public DatabaseServiceImpl(DynamoDBMapper mapper) {
+    public DatabaseServiceImpl(Function<STSSessionCredentialsProvider,AmazonDynamoDB> dynamoDBSupplier,
+                               Credentials credentials,
+                               Environment environment) {
+        this.dynamoDBSupplier =dynamoDBSupplier;
+        this.environment = environment;
+        this.mapper = createMapperOverridingHardCodedTableName(dynamoDBSupplier.apply(credentialsProvider(credentials)),
+            environment);
+    }
+
+    public DatabaseServiceImpl(DynamoDBMapper mapper, Environment environment) {
         super();
+        this.environment = environment;
         this.mapper = mapper;
     }
 
@@ -141,6 +158,14 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
 
         PaginatedQueryList<RoleDb> searchRoleByNameResult = mapper.query(RoleDb.class, searchRoleByName);
         return convertQueryResultToOptionalRole(queryObject, searchRoleByNameResult);
+    }
+
+    @Override
+    public void updateClient(Credentials credentials) {
+
+        AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentialsProvider(credentials));
+        this.mapper= createMapperOverridingHardCodedTableName(client,environment);
+
     }
 
     @Override

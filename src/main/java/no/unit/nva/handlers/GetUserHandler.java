@@ -7,6 +7,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.nio.file.Path;
 import java.util.Optional;
@@ -64,9 +65,11 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
             .withPolicy(policy);
 
         AssumeRoleResult result = stsClient.assumeRole(request);
+
         logger.info(result.toString());
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
+        databaseService.updateClient(result.getCredentials());
         return databaseService.getUser(queryObject);
     }
 

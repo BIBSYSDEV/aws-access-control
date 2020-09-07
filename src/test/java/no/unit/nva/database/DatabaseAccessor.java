@@ -24,7 +24,11 @@ import com.amazonaws.services.dynamodbv2.model.ProjectionType;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.amazonaws.services.dynamodbv2.model.ScalarAttributeType;
 import com.amazonaws.services.dynamodbv2.model.TableDescription;
+import com.amazonaws.services.securitytoken.model.Credentials;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import no.unit.nva.database.interfaces.WithEnvironment;
 import nva.commons.utils.Environment;
@@ -41,7 +45,8 @@ public abstract class DatabaseAccessor implements WithEnvironment {
     protected AmazonDynamoDB localDynamo;
 
     public DatabaseServiceImpl createDatabaseServiceUsingLocalStorage() {
-        return new DatabaseServiceImpl(initializeTestDatabase(), envWithTableName);
+        final AmazonDynamoDB db= initializeTestDatabase();
+        return new DatabaseServiceImpl(credentials->db,mockCredentials(), envWithTableName);
     }
 
     /**
@@ -138,5 +143,10 @@ public abstract class DatabaseAccessor implements WithEnvironment {
     private static ProvisionedThroughput provisionedThroughputForLocalDatabase() {
         // not sure if provisioned throughput plays any role in Local databases.
         return new ProvisionedThroughput(CAPACITY_DOES_NOT_MATTER, CAPACITY_DOES_NOT_MATTER);
+    }
+
+    protected Credentials mockCredentials() {
+        return new Credentials("accessKeyId", "accessKey", "sessionToken",
+            Date.from(Instant.now().plus(Duration.ofDays(1))));
     }
 }

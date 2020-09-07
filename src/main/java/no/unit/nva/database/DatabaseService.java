@@ -1,5 +1,7 @@
 package no.unit.nva.database;
 
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import java.util.List;
 import java.util.Optional;
 import no.unit.nva.exceptions.ConflictException;
@@ -8,6 +10,7 @@ import no.unit.nva.exceptions.InvalidInputException;
 import no.unit.nva.exceptions.NotFoundException;
 import no.unit.nva.model.RoleDto;
 import no.unit.nva.model.UserDto;
+import nva.commons.utils.Environment;
 
 public interface DatabaseService {
 
@@ -30,4 +33,5 @@ public interface DatabaseService {
     RoleDto getRole(RoleDto input) throws InvalidEntryInternalException, NotFoundException;
 
     Optional<RoleDto> getRoleAsOptional(RoleDto input) throws InvalidEntryInternalException;
+    void updateClient(Credentials credentials);
 }

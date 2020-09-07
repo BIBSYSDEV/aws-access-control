@@ -35,7 +35,7 @@ public class DatabaseServiceImplTest extends DatabaseAccessor {
     public void init() throws InvalidEntryInternalException {
 
         someUser = UserDto.newBuilder().withUsername(SOME_USERNAME).build();
-        databaseService = new DatabaseServiceImpl(initializeTestDatabase(), envWithTableName);
+        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(),mockCredentials(), envWithTableName);
     }
 
     @Test
@@ -87,14 +87,14 @@ public class DatabaseServiceImplTest extends DatabaseAccessor {
         UserDb userWithoutUsername = new UserDb();
         PaginatedQueryList<UserDb> response = mockResponseFromDynamoMapper(userWithoutUsername);
         DynamoDBMapper mockMapper = mockDynamoMapperReturningInvalidUser(response);
-        return new DatabaseServiceImpl(mockMapper);
+        return new DatabaseServiceImpl(mockMapper,envWithTableName);
     }
 
     private DatabaseService mockServiceReceivingInvalidRoleDbInstance() {
         RoleDb roleWithoutName = new RoleDb();
         PaginatedQueryList<RoleDb> response = mockResponseFromDynamoMapper(roleWithoutName);
         DynamoDBMapper mockMapper = mockDynamoMapperReturningInvalidRole(response);
-        return new DatabaseServiceImpl(mockMapper);
+        return new DatabaseServiceImpl(mockMapper,envWithTableName);
     }
 
     @SuppressWarnings("unchecked")

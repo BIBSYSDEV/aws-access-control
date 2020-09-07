@@ -14,11 +14,15 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
+import com.amazonaws.services.securitytoken.model.Credentials;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
+import java.util.Date;
 import no.unit.nva.exceptions.BadRequestException;
 import no.unit.nva.exceptions.ConflictException;
 import no.unit.nva.exceptions.InvalidEntryInternalException;
@@ -56,9 +60,17 @@ class GetUserHandlerTest extends HandlerTest {
     private AWSSecurityTokenService mockStsService() {
         AWSSecurityTokenService sts = mock(AWSSecurityTokenService.class);
         when(sts.assumeRole(any(AssumeRoleRequest.class)))
-            .thenReturn(new AssumeRoleResult());
+            .thenReturn(mockAssumeRole());
         return sts;
     }
+
+    private AssumeRoleResult mockAssumeRole() {
+        return new AssumeRoleResult().withCredentials(
+            mockCredentials());
+    }
+
+
+
 
     @DisplayName("handleRequest returns User object with type \"User\"")
     @Test

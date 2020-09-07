@@ -18,7 +18,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.StandardCharsets;
 import java.util.Collections;
 import java.util.Map;
 import no.unit.nva.database.DatabaseServiceImpl;
@@ -55,7 +54,7 @@ public class UpdateUserHandlerTest extends HandlerTest {
 
     @BeforeEach
     public void init() {
-        databaseService = new DatabaseServiceImpl(initializeTestDatabase(), envWithTableName);
+        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(), mockCredentials(), envWithTableName);
         context = mock(Context.class);
         output = new ByteArrayOutputStream();
     }
