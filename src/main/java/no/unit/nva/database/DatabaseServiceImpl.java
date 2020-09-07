@@ -55,33 +55,21 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     public static final String NOT_USED = "NOT_USED";
     private static final Logger logger = LoggerFactory.getLogger(DatabaseServiceImpl.class);
     private static final String UPDATE_ROLE_DEBUG_MESSAGE = "Updating role: ";
-    private DynamoDBMapper mapper;
     private final Environment environment;
-
-    private Function<STSSessionCredentialsProvider,AmazonDynamoDB> dynamoDBSupplier;
-
+    private DynamoDBMapper mapper;
+    private Function<STSSessionCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier;
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
-        this(credentials->AmazonDynamoDBClientBuilder.defaultClient(),
+        this(credentials -> AmazonDynamoDBClientBuilder.defaultClient(),
             null,
             new Environment());
     }
 
-
-    public static STSSessionCredentialsProvider credentialsProvider(Credentials credentials){
-        final BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
-            credentials.getAccessKeyId(),
-            credentials.getSecretAccessKey(),
-            credentials.getSessionToken());
-
-        return new STSSessionCredentialsProvider(sessionCredentials);
-    }
-
-    public DatabaseServiceImpl(Function<STSSessionCredentialsProvider,AmazonDynamoDB> dynamoDBSupplier,
+    public DatabaseServiceImpl(Function<STSSessionCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier,
                                Credentials credentials,
                                Environment environment) {
-        this.dynamoDBSupplier =dynamoDBSupplier;
+        this.dynamoDBSupplier = dynamoDBSupplier;
         this.environment = environment;
         this.mapper = createMapperOverridingHardCodedTableName(dynamoDBSupplier.apply(credentialsProvider(credentials)),
             environment);
@@ -91,6 +79,35 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         super();
         this.environment = environment;
         this.mapper = mapper;
+    }
+
+    public static STSSessionCredentialsProvider credentialsProvider(Credentials credentials) {
+        if (credentials != null) {
+            final BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
+                credentials.getAccessKeyId(),
+                credentials.getSecretAccessKey(),
+                credentials.getSessionToken());
+
+            return new STSSessionCredentialsProvider(sessionCredentials);
+        }
+        return null;
+    }
+
+    private static String convertToStringOrWriteErrorMessage(JsonSerializable queryObject) {
+        return Optional.ofNullable(queryObject).map(JsonSerializable::toString).orElse(EMPTY_INPUT_ERROR_MESSAGE);
+    }
+
+    private static <I extends WithType> DynamoDBQueryExpression<I> createGetQuery(I searchObject) {
+        return new DynamoDBQueryExpression<I>()
+            .withHashKeyValues(searchObject)
+            .withRangeKeyCondition(PRIMARY_KEY_RANGE_KEY, entityTypeAsRangeKey(searchObject));
+    }
+
+    private static <I extends WithType> Condition entityTypeAsRangeKey(I searchObject) {
+        Condition comparisonCondition = new Condition();
+        comparisonCondition.setComparisonOperator(ComparisonOperator.EQ);
+        comparisonCondition.setAttributeValueList(List.of(new AttributeValue(searchObject.getType())));
+        return comparisonCondition;
     }
 
     @Override
@@ -141,7 +158,6 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         if (!existingUser.equals(queryObject)) {
             mapper.save(queryObject.toUserDb());
         }
-
     }
 
     @Override
@@ -164,8 +180,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     public void updateClient(Credentials credentials) {
 
         AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentialsProvider(credentials));
-        this.mapper= createMapperOverridingHardCodedTableName(client,environment);
-
+        this.mapper = createMapperOverridingHardCodedTableName(client, environment);
     }
 
     @Override
@@ -242,23 +257,6 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
 
     private boolean userAlreadyExists(UserDto user) throws InvalidEntryInternalException {
         return this.getUserAsOptional(user).isPresent();
-    }
-
-    private static String convertToStringOrWriteErrorMessage(JsonSerializable queryObject) {
-        return Optional.ofNullable(queryObject).map(JsonSerializable::toString).orElse(EMPTY_INPUT_ERROR_MESSAGE);
-    }
-
-    private static <I extends WithType> DynamoDBQueryExpression<I> createGetQuery(I searchObject) {
-        return new DynamoDBQueryExpression<I>()
-            .withHashKeyValues(searchObject)
-            .withRangeKeyCondition(PRIMARY_KEY_RANGE_KEY, entityTypeAsRangeKey(searchObject));
-    }
-
-    private static <I extends WithType> Condition entityTypeAsRangeKey(I searchObject) {
-        Condition comparisonCondition = new Condition();
-        comparisonCondition.setComparisonOperator(ComparisonOperator.EQ);
-        comparisonCondition.setAttributeValueList(List.of(new AttributeValue(searchObject.getType())));
-        return comparisonCondition;
     }
 
     private <I> IllegalStateException unexpectedException(Failure<I> failure) {
