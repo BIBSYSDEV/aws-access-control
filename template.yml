@@ -265,7 +265,6 @@ Resources:
               AWS: !GetAtt LambdaRole.Arn
             Action:
                 - sts:TagSession
-
       Path: /
 
   LambdaRole:
