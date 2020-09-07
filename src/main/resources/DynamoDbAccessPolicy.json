@@ -16,14 +16,7 @@
       ],
       "Resource": [
         "arn:aws:dynamodb:eu-west-1:884807050265:table/OrestisTable"
-      ],
-      "Condition": {
-        "ForAllValues:StringEquals": {
-          "dynamodb:LeadingKeys": [
-            "USER#orestis"
-          ]
-        }
-      }
+      ]
     }
   ]
 }
