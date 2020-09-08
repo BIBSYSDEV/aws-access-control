@@ -178,7 +178,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
 
     @Override
     public void updateClient(Credentials credentials) {
-
+        logger.info("Updating client...");
         AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentialsProvider(credentials));
         this.mapper = createMapperOverridingHardCodedTableName(client, environment);
     }

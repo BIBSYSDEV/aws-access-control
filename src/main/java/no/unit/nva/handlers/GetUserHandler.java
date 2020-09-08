@@ -56,6 +56,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
         String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
         String username = extractValidUserNameOrThrowException(requestInfo);
+        logger.info("Searching for user with username:"+username);
         AssumeRoleRequest request = new AssumeRoleRequest()
             .withRoleArn(roleArn)
             .withDurationSeconds(MIN_DURATION_SECONDS)
