@@ -61,9 +61,15 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
-        this(credentials -> AmazonDynamoDBClientBuilder.defaultClient(),
+        this(DatabaseServiceImpl::getAmazonDynamoDB,
             null,
             new Environment());
+    }
+
+    private static AmazonDynamoDB getAmazonDynamoDB(STSSessionCredentialsProvider credentialsProvider) {
+        return AmazonDynamoDBClientBuilder.standard()
+            .withCredentials(credentialsProvider)
+            .build();
     }
 
     public DatabaseServiceImpl(Function<STSSessionCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier,
