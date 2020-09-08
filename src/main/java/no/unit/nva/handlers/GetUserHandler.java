@@ -55,12 +55,10 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
         String tableArn = environment.readEnv("TABLE_ARN");
         String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
-        logger.info("Assuming role:"+roleArn);
+
         String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
         String username = extractValidUserNameOrThrowException(requestInfo);
-        logger.info("Searching for user with username:"+username);
         final String mySession = "mySession";
-
 
         STSAssumeRoleSessionCredentialsProvider credentials=
             new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
