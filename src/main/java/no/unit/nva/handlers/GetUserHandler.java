@@ -64,7 +64,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
         STSAssumeRoleSessionCredentialsProvider credentials=
             new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
-                .withExternalId("orestis")
+                .withExternalId("USER:orestis")
                .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue("orestis")))
                 .withScopeDownPolicy(policy)
             .withStsClient(stsClient).build();
