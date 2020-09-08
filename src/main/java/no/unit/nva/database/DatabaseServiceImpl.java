@@ -83,6 +83,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
 
     public static STSSessionCredentialsProvider credentialsProvider(Credentials credentials) {
         if (credentials != null) {
+            logger.info("Credentials are not null");
             final BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
                 credentials.getAccessKeyId(),
                 credentials.getSecretAccessKey(),
