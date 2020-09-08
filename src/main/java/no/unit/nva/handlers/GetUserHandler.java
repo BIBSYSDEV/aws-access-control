@@ -61,8 +61,8 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
             .withDurationSeconds(MIN_DURATION_SECONDS)
 //            .withTags(new Tag().withKey("username").withValue(username))
 //            .withTags(new Tag().withKey("tableArn").withValue(tableArn))
-            .withRoleSessionName("mySession")
-            .withPolicy(policy);
+            .withRoleSessionName("mySession");
+//            .withPolicy(policy);
 
         AssumeRoleResult result = stsClient.assumeRole(request);
 
