@@ -5,7 +5,7 @@ import static java.util.Objects.isNull;
 public abstract class DynamoEntry implements WithType {
 
     @SuppressWarnings("PMD.ConstantsInInterface")
-    public static String FIELD_DELIMITER = "#";
+    public static String FIELD_DELIMITER = ":";
 
     public abstract String getPrimaryHashKey();
 
