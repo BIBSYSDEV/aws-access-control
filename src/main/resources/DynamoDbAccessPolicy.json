@@ -20,7 +20,7 @@
       "Condition": {
         "ForAllValues:StringEquals": {
           "dynamodb:LeadingKeys": [
-            "USER#orestis"
+            "USER:orestis"
           ]
         }
       }
