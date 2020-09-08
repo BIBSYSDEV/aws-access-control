@@ -10,6 +10,7 @@ import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Optional;
 import no.unit.nva.database.DatabaseService;
 import no.unit.nva.database.DatabaseServiceImpl;
@@ -59,19 +60,13 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         String username = extractValidUserNameOrThrowException(requestInfo);
         logger.info("Searching for user with username:"+username);
         final String mySession = "mySession";
-        AssumeRoleRequest request = new AssumeRoleRequest()
-            .withRoleArn(roleArn)
-            .withDurationSeconds(MIN_DURATION_SECONDS)
-            .withTags(new Tag().withKey("username").withValue(username))
-//            .withTags(new Tag().withKey("tableArn").withValue(tableArn))
-            .withRoleSessionName(mySession);
-//            .withPolicy(policy);
 
-        AssumeRoleResult result = stsClient.assumeRole(request);
 
-        STSAssumeRoleSessionCredentialsProvider credentials= new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
+        STSAssumeRoleSessionCredentialsProvider credentials=
+            new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
+               .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue(username)))
             .withStsClient(stsClient).build();
-        logger.info(result.toString());
+
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
         databaseService.updateClient(credentials);
