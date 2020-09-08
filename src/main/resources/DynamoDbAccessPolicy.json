@@ -20,7 +20,7 @@
       "Condition": {
         "ForAllValues:StringEquals": {
           "dynamodb:LeadingKeys": [
-            "${aws:RequestTag/username}"
+            "${aws:PrincipalTag/username}"
           ]
         }
       }
