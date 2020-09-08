@@ -68,6 +68,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
         AssumeRoleResult result = stsClient.assumeRole(request);
 
+
         logger.info(result.toString());
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();

@@ -6,8 +6,9 @@ import static no.unit.nva.database.DatabaseIndexDetails.SEARCH_USERS_BY_INSTITUT
 import static nva.commons.utils.JsonUtils.objectMapper;
 import static nva.commons.utils.attempt.Try.attempt;
 
-import com.amazonaws.auth.BasicSessionCredentials;
-import com.amazonaws.auth.STSSessionCredentialsProvider;
+import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.AWSStaticCredentialsProvider;
+import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -57,7 +58,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     private static final String UPDATE_ROLE_DEBUG_MESSAGE = "Updating role: ";
     private final Environment environment;
     private DynamoDBMapper mapper;
-    private Function<STSSessionCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier;
+    private Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier;
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
@@ -66,13 +67,13 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
             new Environment());
     }
 
-    private static AmazonDynamoDB getAmazonDynamoDB(STSSessionCredentialsProvider credentialsProvider) {
+    private static AmazonDynamoDB getAmazonDynamoDB(AWSCredentialsProvider credentialsProvider) {
         return AmazonDynamoDBClientBuilder.standard()
             .withCredentials(credentialsProvider)
             .build();
     }
 
-    public DatabaseServiceImpl(Function<STSSessionCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier,
+    public DatabaseServiceImpl(Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier,
                                Credentials credentials,
                                Environment environment) {
         this.dynamoDBSupplier = dynamoDBSupplier;
@@ -87,15 +88,14 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         this.mapper = mapper;
     }
 
-    public static STSSessionCredentialsProvider credentialsProvider(Credentials credentials) {
+    public static AWSCredentialsProvider credentialsProvider(Credentials credentials) {
         if (credentials != null) {
             logger.info("Credentials are not null");
-            final BasicSessionCredentials sessionCredentials = new BasicSessionCredentials(
+            final BasicAWSCredentials sessionCredentials = new BasicAWSCredentials(
                 credentials.getAccessKeyId(),
-                credentials.getSecretAccessKey(),
-                credentials.getSessionToken());
+                credentials.getSecretAccessKey());
+            return new AWSStaticCredentialsProvider(sessionCredentials);
 
-            return new STSSessionCredentialsProvider(sessionCredentials);
         }
         return null;
     }
@@ -194,6 +194,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     public Optional<UserDto> getUserAsOptional(UserDto queryObject) throws InvalidEntryInternalException {
         logger.debug(
             GET_USER_DEBUG_MESSAGE + convertToStringOrWriteErrorMessage(queryObject));
+
         DynamoDBQueryExpression<UserDb> searchUserRequest = createGetQuery(queryObject.toUserDb());
         List<UserDb> userSearchResult = mapper.query(UserDb.class, searchUserRequest);
         return convertQueryResultToOptionalUser(userSearchResult, queryObject);
