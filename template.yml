@@ -284,10 +284,6 @@ Resources:
                  - sts:TagSession
                Resource:
                  - arn:aws:dynamodb:eu-west-1:884807050265:table/OrestisTable
-               Condition:
-                 ForAllValues:StringEquals:
-                   dynamodb:LeadingKeys:
-                     - "${sts:ExternalId}"
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
