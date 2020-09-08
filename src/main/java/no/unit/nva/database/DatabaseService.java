@@ -1,5 +1,6 @@
 package no.unit.nva.database;
 
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.model.Credentials;
 import java.util.List;
@@ -33,5 +34,5 @@ public interface DatabaseService {
     RoleDto getRole(RoleDto input) throws InvalidEntryInternalException, NotFoundException;
 
     Optional<RoleDto> getRoleAsOptional(RoleDto input) throws InvalidEntryInternalException;
-    void updateClient(Credentials credentials);
+    void updateClient(STSAssumeRoleSessionCredentialsProvider credentials);
 }

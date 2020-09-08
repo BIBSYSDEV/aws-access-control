@@ -2,13 +2,12 @@ package no.unit.nva.handlers;
 
 import static java.util.function.Predicate.not;
 
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
 import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
-import com.amazonaws.services.securitytoken.model.Credentials;
-import com.amazonaws.services.securitytoken.model.Tag;
 import java.nio.file.Path;
 import java.util.Optional;
 import no.unit.nva.database.DatabaseService;
@@ -58,21 +57,23 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
         String username = extractValidUserNameOrThrowException(requestInfo);
         logger.info("Searching for user with username:"+username);
+        final String mySession = "mySession";
         AssumeRoleRequest request = new AssumeRoleRequest()
             .withRoleArn(roleArn)
             .withDurationSeconds(MIN_DURATION_SECONDS)
 //            .withTags(new Tag().withKey("username").withValue(username))
 //            .withTags(new Tag().withKey("tableArn").withValue(tableArn))
-            .withRoleSessionName("mySession");
+            .withRoleSessionName(mySession);
 //            .withPolicy(policy);
 
         AssumeRoleResult result = stsClient.assumeRole(request);
 
-
+        STSAssumeRoleSessionCredentialsProvider credentials= new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
+            .withStsClient(stsClient).build();
         logger.info(result.toString());
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
-        databaseService.updateClient(result.getCredentials());
+        databaseService.updateClient(credentials);
         return databaseService.getUser(queryObject);
     }
 

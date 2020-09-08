@@ -9,6 +9,7 @@ import static nva.commons.utils.attempt.Try.attempt;
 import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
+import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
@@ -94,7 +95,7 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
             final BasicAWSCredentials sessionCredentials = new BasicAWSCredentials(
                 credentials.getAccessKeyId(),
                 credentials.getSecretAccessKey());
-            return new AWSStaticCredentialsProvider(sessionCredentials);
+
 
         }
         return null;
@@ -184,9 +185,9 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     }
 
     @Override
-    public void updateClient(Credentials credentials) {
+    public void updateClient(STSAssumeRoleSessionCredentialsProvider credentials) {
         logger.info("Updating client...");
-        AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentialsProvider(credentials));
+        AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentials);
         this.mapper = createMapperOverridingHardCodedTableName(client, environment);
     }
 
