@@ -283,7 +283,7 @@ Resources:
                  - sts:AssumeRole
                  - sts:TagSession
                Resource:
-                 - arn:aws:dynamodb:eu-west-1:884807050265:table/OrestisTable
+                 - !GetAtt UserRoleMappings.Arn
                Condition:
                  ForAllValues:StringEquals:
                    dynamodb:LeadingKeys:
