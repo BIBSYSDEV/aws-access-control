@@ -6,8 +6,6 @@ import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
-import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
-import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -63,7 +61,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         STSAssumeRoleSessionCredentialsProvider credentials=
             new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
                 .withExternalId("orestis")
-               .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue("orestis")))
+               .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue(username)))
                 //.withScopeDownPolicy(policy)
             .withStsClient(stsClient).build();
 
