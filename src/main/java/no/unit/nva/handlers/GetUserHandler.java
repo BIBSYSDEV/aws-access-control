@@ -7,7 +7,9 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.Tag;
+import com.fasterxml.jackson.core.JsonProcessingException;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import no.unit.nva.database.DatabaseService;
 import no.unit.nva.database.DatabaseServiceImpl;
@@ -18,6 +20,7 @@ import nva.commons.exceptions.ApiGatewayException;
 import nva.commons.handlers.RequestInfo;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
+import nva.commons.utils.JsonUtils;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,9 +56,9 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
 
 
-        String loggedInUser = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
-        String requestedUser = extractValidUserNameOrThrowException(requestInfo);
 
+        String requestedUser = extractValidUserNameOrThrowException(requestInfo);
+        String loggedInUser = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
         logger.info("Username:"+loggedInUser);
         final String mySession = "mySession";
 
@@ -68,6 +71,14 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
         UserDto queryObject = UserDto.newBuilder().withUsername(requestedUser).build();
         databaseService.login(credentials);
+        List<UserDto> users = databaseService.listUsers(
+            "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934");
+        try {
+            String jsonUsers= JsonUtils.objectMapper.writeValueAsString(users);
+            logger.info(jsonUsers);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         return databaseService.getUser(queryObject);
     }
 

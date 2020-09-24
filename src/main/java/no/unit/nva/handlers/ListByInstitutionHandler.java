@@ -38,6 +38,7 @@ public class ListByInstitutionHandler extends ApiGatewayHandler<Void, UserList> 
     @Override
     protected UserList processInput(Void input, RequestInfo requestInfo, Context context) throws ApiGatewayException {
         String institutionId = extractInstitutionIdFromRequest(requestInfo);
+
         List<UserDto> users = databaseService.listUsers(institutionId);
         return UserList.fromList(users);
     }
