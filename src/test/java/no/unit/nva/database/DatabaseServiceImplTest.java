@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBQueryExpression;
 import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
@@ -35,8 +36,9 @@ public class DatabaseServiceImplTest extends DatabaseAccessor {
     public void init() throws InvalidEntryInternalException {
 
         someUser = UserDto.newBuilder().withUsername(SOME_USERNAME).build();
-        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(),mockCredentials(), envWithTableName);
+        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(),mockCredentialsProvider(), envWithTableName);
     }
+
 
     @Test
     public void getUserThrowsIllegalStateExceptionWhenItReceivesInvalidUserFromDatabase() {

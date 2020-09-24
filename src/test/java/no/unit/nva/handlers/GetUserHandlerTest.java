@@ -8,6 +8,7 @@ import static org.hamcrest.core.IsNull.nullValue;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -23,6 +24,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.Optional;
 import no.unit.nva.exceptions.BadRequestException;
 import no.unit.nva.exceptions.ConflictException;
 import no.unit.nva.exceptions.InvalidEntryInternalException;
@@ -65,28 +67,10 @@ class GetUserHandlerTest extends HandlerTest {
     }
 
     private AssumeRoleResult mockAssumeRole() {
-        return new AssumeRoleResult().withCredentials(
-            mockCredentials());
+        return new AssumeRoleResult().withCredentials(mockCredentials());
     }
 
 
-
-
-    @DisplayName("handleRequest returns User object with type \"User\"")
-    @Test
-    public void handleRequestReturnsUserObjectWithTypeRole()
-        throws ConflictException, InvalidEntryInternalException, InvalidInputException, IOException {
-        insertSampleUserToDatabase();
-
-        ByteArrayOutputStream outputStream = sendGetUserRequestToHandler();
-
-        GatewayResponse<ObjectNode> response = GatewayResponse.fromOutputStream(outputStream);
-        ObjectNode bodyObject = response.getBodyObject(ObjectNode.class);
-
-        assertThat(bodyObject.get(TypedObjectsDetails.TYPE_ATTRIBUTE), is(not(nullValue())));
-        String type = bodyObject.get(TypedObjectsDetails.TYPE_ATTRIBUTE).asText();
-        assertThat(type, is(equalTo(UserDto.TYPE)));
-    }
 
     private ByteArrayOutputStream sendGetUserRequestToHandler() throws IOException {
         requestInfo = createRequestInfoForGetUser(DEFAULT_USERNAME);
@@ -133,13 +117,6 @@ class GetUserHandlerTest extends HandlerTest {
         assertThrows(NotFoundException.class, action);
     }
 
-    @DisplayName("processInput() throws BadRequestException when path parameter is a blank string")
-    @Test
-    void processInputThrowBadRequestExceptionWhenPathParameterIsBlank() {
-        requestInfo = createRequestInfoForGetUser(BLANK_STRING);
-        Executable action = () -> getUserHandler.processInput(null, requestInfo, context);
-        assertThrows(BadRequestException.class, action);
-    }
 
     @DisplayName("processInput() throws BadRequestException when path parameter is null")
     @Test
@@ -152,6 +129,13 @@ class GetUserHandlerTest extends HandlerTest {
     private RequestInfo createRequestInfoForGetUser(String username) {
         RequestInfo reqInfo = new RequestInfo();
         reqInfo.setPathParameters(Collections.singletonMap(GetUserHandler.USERNAME_PATH_PARAMETER, username));
-        return reqInfo;
+        RequestInfo mockReqInfo = spy(reqInfo);
+
+        Optional<String> loggedInUser = Optional.ofNullable(username);
+        if(loggedInUser.isEmpty()){
+            loggedInUser= Optional.of("someUser");
+        }
+        when(mockReqInfo.getUsername()).thenReturn(loggedInUser);
+        return mockReqInfo;
     }
 }

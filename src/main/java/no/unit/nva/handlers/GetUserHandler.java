@@ -53,18 +53,20 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
 
 
-        String username = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
-        logger.info("Username:"+username);
+        String loggedInUser = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
+        String requestedUser = extractValidUserNameOrThrowException(requestInfo);
+
+        logger.info("Username:"+loggedInUser);
         final String mySession = "mySession";
 
         STSAssumeRoleSessionCredentialsProvider credentials=
             new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
                 .withExternalId("orestis")
-               .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue(username)))
+               .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue(loggedInUser)))
             .withStsClient(stsClient).build();
 
 
-        UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
+        UserDto queryObject = UserDto.newBuilder().withUsername(requestedUser).build();
         databaseService.login(credentials);
         return databaseService.getUser(queryObject);
     }
@@ -78,4 +80,12 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
         return HttpStatus.SC_OK;
     }
 
+    private String extractValidUserNameOrThrowException(RequestInfo requestInfo) throws BadRequestException {
+        return Optional.of(requestInfo)
+            .map(RequestInfo::getPathParameters)
+            .map(map -> map.get(USERNAME_PATH_PARAMETER))
+            .map(this::decodeUrlPart)
+            .filter(not(String::isBlank))
+            .orElseThrow(() -> new BadRequestException(EMPTY_USERNAME_PATH_PARAMETER_ERROR));
+    }
 }

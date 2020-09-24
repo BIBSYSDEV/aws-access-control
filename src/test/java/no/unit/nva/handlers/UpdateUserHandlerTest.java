@@ -54,7 +54,7 @@ public class UpdateUserHandlerTest extends HandlerTest {
 
     @BeforeEach
     public void init() {
-        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(), mockCredentials(), envWithTableName);
+        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(), mockCredentialsProvider(), envWithTableName);
         context = mock(Context.class);
         output = new ByteArrayOutputStream();
     }

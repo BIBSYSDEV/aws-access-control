@@ -46,7 +46,7 @@ public class AddRoleHandlerTest extends HandlerTest {
     public void init() throws InvalidEntryInternalException {
         context = mock(Context.class);
         initializeTestDatabase();
-        DatabaseService service = new DatabaseServiceImpl(cred->localDynamo,mockCredentials(), envWithTableName);
+        DatabaseService service = new DatabaseServiceImpl(cred->localDynamo,mockCredentialsProvider(), envWithTableName);
         addRoleHandler = new AddRoleHandler(mockEnvironment(), service);
         sampleRole = sampleRole();
     }
@@ -162,7 +162,7 @@ public class AddRoleHandlerTest extends HandlerTest {
 
     private AddRoleHandler addRoleHandlerThrowsUnexpectedException() {
         DatabaseService databaseServiceThrowingException =
-            new DatabaseServiceImpl(c->localDynamo,mockCredentials(), envWithTableName) {
+            new DatabaseServiceImpl(c->localDynamo,mockCredentialsProvider(), envWithTableName) {
             @Override
             public Optional<RoleDto> getRoleAsOptional(RoleDto queryObject) {
                 return Optional.empty();
@@ -173,7 +173,7 @@ public class AddRoleHandlerTest extends HandlerTest {
     }
 
     private DatabaseServiceImpl databaseServiceWithSyncDelay() {
-        return new DatabaseServiceImpl(c->localDynamo,mockCredentials(), envWithTableName) {
+        return new DatabaseServiceImpl(c->localDynamo,mockCredentialsProvider(), envWithTableName) {
             private int counter = 0;
 
             @Override
@@ -188,7 +188,7 @@ public class AddRoleHandlerTest extends HandlerTest {
     }
 
     private DatabaseServiceImpl databaseServiceReturningEmpty() {
-        return new DatabaseServiceImpl(c->localDynamo,mockCredentials(), envWithTableName) {
+        return new DatabaseServiceImpl(c->localDynamo,mockCredentialsProvider(), envWithTableName) {
             @Override
             public Optional<RoleDto> getRoleAsOptional(RoleDto queryObject) {
                 return Optional.empty();

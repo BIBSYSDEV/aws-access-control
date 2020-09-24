@@ -10,6 +10,7 @@ import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.amazonaws.auth.AWSCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.local.embedded.DynamoDBEmbedded;
 import com.amazonaws.services.dynamodbv2.model.AttributeDefinition;
@@ -46,7 +47,7 @@ public abstract class DatabaseAccessor implements WithEnvironment {
 
     public DatabaseServiceImpl createDatabaseServiceUsingLocalStorage() {
         final AmazonDynamoDB db= initializeTestDatabase();
-        return new DatabaseServiceImpl(credentials->db,mockCredentials(), envWithTableName);
+        return new DatabaseServiceImpl(credentials->db,mockCredentialsProvider(), envWithTableName);
     }
 
     /**
@@ -148,5 +149,9 @@ public abstract class DatabaseAccessor implements WithEnvironment {
     protected Credentials mockCredentials() {
         return new Credentials("accessKeyId", "accessKey", "sessionToken",
             Date.from(Instant.now().plus(Duration.ofDays(1))));
+    }
+
+    protected AWSCredentialsProvider mockCredentialsProvider() {
+        return null;
     }
 }
