@@ -54,6 +54,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
 
         String username = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
+        logger.info("Username:"+username);
         final String mySession = "mySession";
 
         STSAssumeRoleSessionCredentialsProvider credentials=
