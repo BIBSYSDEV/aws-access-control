@@ -7,8 +7,6 @@ import static nva.commons.utils.JsonUtils.objectMapper;
 import static nva.commons.utils.attempt.Try.attempt;
 
 import com.amazonaws.auth.AWSCredentialsProvider;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
@@ -18,7 +16,6 @@ import com.amazonaws.services.dynamodbv2.datamodeling.PaginatedQueryList;
 import com.amazonaws.services.dynamodbv2.model.AttributeValue;
 import com.amazonaws.services.dynamodbv2.model.ComparisonOperator;
 import com.amazonaws.services.dynamodbv2.model.Condition;
-import com.amazonaws.services.securitytoken.model.Credentials;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -59,28 +56,17 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     private static final String UPDATE_ROLE_DEBUG_MESSAGE = "Updating role: ";
     private final Environment environment;
     private DynamoDBMapper mapper;
-    private Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier;
+    private Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDbClientSupplier;
 
     @JacocoGenerated
     public DatabaseServiceImpl() {
-        this(DatabaseServiceImpl::getAmazonDynamoDB,
-            null,
-            new Environment());
+        this( new Environment());
     }
 
-    private static AmazonDynamoDB getAmazonDynamoDB(AWSCredentialsProvider credentialsProvider) {
-        return AmazonDynamoDBClientBuilder.standard()
-            .withCredentials(credentialsProvider)
-            .build();
-    }
-
-    public DatabaseServiceImpl(Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDBSupplier,
-                               Credentials credentials,
-                               Environment environment) {
-        this.dynamoDBSupplier = dynamoDBSupplier;
+    public DatabaseServiceImpl(Environment environment) {
+        this.dynamoDbClientSupplier = credentialsProvider -> newAmazonDbClient(credentialsProvider);
         this.environment = environment;
-        this.mapper = createMapperOverridingHardCodedTableName(dynamoDBSupplier.apply(credentialsProvider(credentials)),
-            environment);
+        this.mapper = createMapperOverridingHardCodedTableName(notLoggedInDynamoClient(), environment);
     }
 
     public DatabaseServiceImpl(DynamoDBMapper mapper, Environment environment) {
@@ -89,16 +75,10 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         this.mapper = mapper;
     }
 
-    public static AWSCredentialsProvider credentialsProvider(Credentials credentials) {
-        if (credentials != null) {
-            logger.info("Credentials are not null");
-            final BasicAWSCredentials sessionCredentials = new BasicAWSCredentials(
-                credentials.getAccessKeyId(),
-                credentials.getSecretAccessKey());
-
-
-        }
-        return null;
+    private static AmazonDynamoDB newAmazonDbClient(AWSCredentialsProvider credentialsProvider) {
+        return AmazonDynamoDBClientBuilder.standard()
+            .withCredentials(credentialsProvider)
+            .build();
     }
 
     private static String convertToStringOrWriteErrorMessage(JsonSerializable queryObject) {
@@ -185,9 +165,9 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
     }
 
     @Override
-    public void updateClient(STSAssumeRoleSessionCredentialsProvider credentials) {
+    public void login(STSAssumeRoleSessionCredentialsProvider credentials) {
         logger.info("Updating client...");
-        AmazonDynamoDB client = this.dynamoDBSupplier.apply(credentials);
+        AmazonDynamoDB client = this.dynamoDbClientSupplier.apply(credentials);
         this.mapper = createMapperOverridingHardCodedTableName(client, environment);
     }
 
@@ -199,6 +179,10 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         DynamoDBQueryExpression<UserDb> searchUserRequest = createGetQuery(queryObject.toUserDb());
         List<UserDb> userSearchResult = mapper.query(UserDb.class, searchUserRequest);
         return convertQueryResultToOptionalUser(userSearchResult, queryObject);
+    }
+
+    private AmazonDynamoDB notLoggedInDynamoClient() {
+        return dynamoDbClientSupplier.apply(null);
     }
 
     private DynamoDBQueryExpression<UserDb> createListUsersQuery(String institution)

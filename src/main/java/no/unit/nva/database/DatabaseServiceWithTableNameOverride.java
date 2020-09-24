@@ -30,12 +30,20 @@ public abstract class DatabaseServiceWithTableNameOverride implements DatabaseSe
     public static DynamoDBMapper createMapperOverridingHardCodedTableName(AmazonDynamoDB dynamoDbClient,
                                                                           Environment environment) {
         String tableName = environment.readEnv(USERS_AND_ROLES_TABLE_NAME_ENV_VARIABLE);
-        attempt(() -> requireNonNull(dynamoDbClient))
-            .orElseThrow(DatabaseServiceWithTableNameOverride::logErrorAndThrowException);
-        DynamoDBMapperConfig dynamoDbMapperConfig = DynamoDBMapperConfig.builder()
+        verifyClientIsNotNull(dynamoDbClient);
+        DynamoDBMapperConfig dynamoDbMapperConfig = dynamoDbConfigWithOverriddenTableName(tableName);
+        return new DynamoDBMapper(dynamoDbClient, dynamoDbMapperConfig);
+    }
+
+    private static DynamoDBMapperConfig dynamoDbConfigWithOverriddenTableName(String tableName) {
+        return DynamoDBMapperConfig.builder()
             .withTableNameOverride(new TableNameOverride(tableName))
             .build();
-        return new DynamoDBMapper(dynamoDbClient, dynamoDbMapperConfig);
+    }
+
+    private static void verifyClientIsNotNull(AmazonDynamoDB dynamoDbClient) {
+        attempt(() -> requireNonNull(dynamoDbClient))
+            .orElseThrow(DatabaseServiceWithTableNameOverride::logErrorAndThrowException);
     }
 
     private static RuntimeException logErrorAndThrowException(Failure<AmazonDynamoDB> failure) {

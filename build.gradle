@@ -12,6 +12,7 @@ repositories {
 final def jacksonVersion = "2.11.2"
 final def jupiterVersion = "5.6.0"
 final def awsSdkVersion = "1.11.852"
+final def nvaCommonsVersion = 'b8942e22ec30af'
 
 dependencies {
 
@@ -31,7 +32,7 @@ dependencies {
     implementation(group: 'com.amazonaws', name: 'aws-lambda-java-core', version: '1.2.1') {
         because("It implements lambda handlers")
     }
-    implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: 'ecce16a7c0c'
+    implementation group: 'com.github.BIBSYSDEV', name: 'nva-commons', version: nvaCommonsVersion
 
     implementation(group: 'org.slf4j', name: 'slf4j-api', version: '1.8.0-beta4') {
         because "Because we use the library directly to define loggers in our code"

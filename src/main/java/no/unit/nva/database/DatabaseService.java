@@ -34,5 +34,5 @@ public interface DatabaseService {
     RoleDto getRole(RoleDto input) throws InvalidEntryInternalException, NotFoundException;
 
     Optional<RoleDto> getRoleAsOptional(RoleDto input) throws InvalidEntryInternalException;
-    void updateClient(STSAssumeRoleSessionCredentialsProvider credentials);
+    void login(STSAssumeRoleSessionCredentialsProvider credentials);
 }

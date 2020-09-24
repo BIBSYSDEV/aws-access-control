@@ -7,17 +7,16 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.Tag;
-import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Optional;
 import no.unit.nva.database.DatabaseService;
 import no.unit.nva.database.DatabaseServiceImpl;
 import no.unit.nva.exceptions.BadRequestException;
+import no.unit.nva.exceptions.NotAuthorizedException;
 import no.unit.nva.model.UserDto;
 import nva.commons.exceptions.ApiGatewayException;
 import nva.commons.handlers.RequestInfo;
 import nva.commons.utils.Environment;
-import nva.commons.utils.IoUtils;
 import nva.commons.utils.JacocoGenerated;
 import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
@@ -51,24 +50,26 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
     protected UserDto processInput(Void input, RequestInfo requestInfo, Context context)
         throws ApiGatewayException {
 
-        String tableArn = environment.readEnv("TABLE_ARN");
         String roleArn = environment.readEnvOpt("ASSUMED_ROLE_ARN").orElse("NO_ASSUMED_ROLE");
 
-        String policy = IoUtils.stringFromResources(Path.of("DynamoDbAccessPolicy.json"));
-        String username = extractValidUserNameOrThrowException(requestInfo);
+
+        String username = requestInfo.getUsername().orElseThrow(this::handleMissingUsername);
         final String mySession = "mySession";
 
         STSAssumeRoleSessionCredentialsProvider credentials=
             new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, mySession)
                 .withExternalId("orestis")
                .withSessionTags(Collections.singletonList(new Tag().withKey("username").withValue(username)))
-                //.withScopeDownPolicy(policy)
             .withStsClient(stsClient).build();
 
 
         UserDto queryObject = UserDto.newBuilder().withUsername(username).build();
-        databaseService.updateClient(credentials);
+        databaseService.login(credentials);
         return databaseService.getUser(queryObject);
+    }
+
+    private NotAuthorizedException handleMissingUsername() {
+        return new NotAuthorizedException("Anonymous user not authorized");
     }
 
     @Override
