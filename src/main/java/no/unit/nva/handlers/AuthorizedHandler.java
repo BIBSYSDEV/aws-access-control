@@ -3,7 +3,6 @@ package no.unit.nva.handlers;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.util.List;
 import java.util.Optional;
@@ -30,10 +29,9 @@ public abstract class AuthorizedHandler<I, O> extends ApiGatewayHandler<I, O> {
 
     @Override
     protected final O processInput(I input, RequestInfo requestInfo, Context context) throws ApiGatewayException {
-        var sessionTags = Optional.ofNullable(sessionTags(requestInfo)).orElse(null);
         STSAssumeRoleSessionCredentialsProvider credentialsProvider =
             new STSAssumeRoleSessionCredentialsProvider.Builder(assumedRoleArn(), session(context))
-                .withSessionTags(sessionTags)
+                .withSessionTags(sessionTags(requestInfo))
                 .withStsClient(stsClient).build();
 
         return processInput(input, requestInfo, credentialsProvider, context);
@@ -46,7 +44,7 @@ public abstract class AuthorizedHandler<I, O> extends ApiGatewayHandler<I, O> {
 
     protected abstract List<Tag> sessionTags(RequestInfo requestInfo);
 
-    private String assumedRoleArn() {
+    protected String assumedRoleArn() {
         return environment.readEnv(ASSUMED_ROLE_ARN_ENV_VAR);
     }
 
