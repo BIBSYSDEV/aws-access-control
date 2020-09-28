@@ -70,8 +70,7 @@ public class GetUserHandler extends HandlerAccessingUser<Void, UserDto> {
 
         UserDto queryObject = UserDto.newBuilder().withUsername(requestedUser).build();
         databaseService.login(credentials);
-        List<UserDto> users = databaseService.listUsers(
-            "https://api.dev.nva.aws.unit.no/customer/f54c8aa9-073a-46a1-8f7c-dde66c853934");
+        List<UserDto> users = databaseService.listUsers("UNIT_INST");
         try {
             String jsonUsers= JsonUtils.objectMapper.writeValueAsString(users);
             logger.info(jsonUsers);
