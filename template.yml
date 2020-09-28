@@ -284,7 +284,7 @@ Resources:
                   - sts:TagSession
                 Resource:
                   - !GetAtt UserRoleMappings.Arn
-                  - Fn::Sub: "arn:aws:dynamodb:eu-west-1:884807050265:table/orestis-users-table/index/SearchUsersByInstitution"
+                  - "arn:aws:dynamodb:eu-west-1:884807050265:table/orestis-users-table/index/SearchUsersByInstitution"
                 Condition:
                   ForAllValues:StringEquals:
                     dynamodb:LeadingKeys:
