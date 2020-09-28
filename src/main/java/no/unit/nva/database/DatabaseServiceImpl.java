@@ -67,12 +67,6 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
             new Environment());
     }
 
-    private static AmazonDynamoDB getAmazonDynamoDB(AWSCredentialsProvider credentialsProvider) {
-        return AmazonDynamoDBClientBuilder.standard()
-            .withCredentials(credentialsProvider)
-            .build();
-    }
-
     public DatabaseServiceImpl(Function<AWSCredentialsProvider, AmazonDynamoDB> dynamoDbClientSupplier,
                                AWSCredentialsProvider credentials,
                                Environment environment) {
@@ -80,6 +74,13 @@ public class DatabaseServiceImpl extends DatabaseServiceWithTableNameOverride {
         this.environment = environment;
         AmazonDynamoDB dynamoDbClient = newDynamoDbClient(credentials);
         this.mapper = createMapperOverridingHardCodedTableName(dynamoDbClient, environment);
+    }
+
+
+    private static AmazonDynamoDB getAmazonDynamoDB(AWSCredentialsProvider credentialsProvider) {
+        return AmazonDynamoDBClientBuilder.standard()
+            .withCredentials(credentialsProvider)
+            .build();
     }
 
     private AmazonDynamoDB newDynamoDbClient(AWSCredentialsProvider credentials) {

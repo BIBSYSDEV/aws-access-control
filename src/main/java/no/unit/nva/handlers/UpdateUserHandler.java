@@ -10,6 +10,7 @@ import no.unit.nva.database.DatabaseServiceImpl;
 import no.unit.nva.exceptions.InvalidInputException;
 import no.unit.nva.model.UserDto;
 import nva.commons.exceptions.ApiGatewayException;
+import nva.commons.handlers.ApiGatewayHandler;
 import nva.commons.handlers.RequestInfo;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;
@@ -17,7 +18,7 @@ import org.apache.http.HttpStatus;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class UpdateUserHandler extends HandlerAccessingUser<UserDto, Void> {
+public class UpdateUserHandler extends ApiGatewayHandler<UserDto, Void> implements HandlerAccessingUser{
 
     public static final String LOCATION_HEADER = "Location";
 

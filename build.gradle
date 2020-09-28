@@ -12,7 +12,7 @@ repositories {
 final def jacksonVersion = "2.11.2"
 final def jupiterVersion = "5.6.0"
 final def awsSdkVersion = "1.11.852"
-final def nvaCommonsVersion = 'b8942e22ec30af'
+final def nvaCommonsVersion = '3d63c3382ee8'
 
 dependencies {
 
