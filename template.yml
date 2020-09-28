@@ -264,30 +264,31 @@ Resources:
             Principal:
               AWS: !GetAtt LambdaRole.Arn
             Action:
-                - sts:TagSession
+              - sts:TagSession
       Path: /
       Policies:
-        - PolicyName: DynamoDbAccess
+        - PolicyName: TableAcess
           PolicyDocument:
-           Version: '2012-10-17'
-           Statement:
-             - Effect: Allow
-               Action:
-                 - dynamodb:GetItem
-                 - dynamodb:PutItem
-                 - dynamodb:UpdateItem
-                 - dynamodb:Scan
-                 - dynamodb:Query
-                 - dynamodb:BatchGetItem
-                 - dynamodb:DescribeTable
-                 - sts:AssumeRole
-                 - sts:TagSession
-               Resource:
-                 - !GetAtt UserRoleMappings.Arn
-               Condition:
-                 ForAllValues:StringEquals:
-                   dynamodb:LeadingKeys:
-                     - "USER:${aws:PrincipalTag/username}"
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:DescribeTable
+                  - sts:AssumeRole
+                  - sts:TagSession
+                Resource:
+                  - !GetAtt UserRoleMappings.Arn
+                  - Fn::Sub: ${UserRoleMappings.Arn}/index/*
+                Condition:
+                  ForAllValues:StringEquals:
+                    dynamodb:LeadingKeys:
+                      - "USER:${aws:PrincipalTag/username}"
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
@@ -311,13 +312,13 @@ Resources:
                   - logs:PutLogEvents
                   - sts:AssumeRole
                   - sts:TagSession
-#                  - dynamodb:GetItem
-#                  - dynamodb:PutItem
-#                  - dynamodb:UpdateItem
-#                  - dynamodb:Scan
-#                  - dynamodb:Query
-#                  - dynamodb:BatchGetItem
-#                  - dynamodb:DescribeTable
+                #                  - dynamodb:GetItem
+                #                  - dynamodb:PutItem
+                #                  - dynamodb:UpdateItem
+                #                  - dynamodb:Scan
+                #                  - dynamodb:Query
+                #                  - dynamodb:BatchGetItem
+                #                  - dynamodb:DescribeTable
                 Resource: "*"
   AddRoleHandler:
     Type: AWS::Serverless::Function
@@ -329,7 +330,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
       Policies:
         - DynamoDBCrudPolicy:
             TableName: !Ref UsersAndRolesTableName
@@ -351,7 +352,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
       Policies:
         - DynamoDBReadPolicy:
             TableName: !Ref UsersAndRolesTableName
@@ -372,7 +373,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
       Role: !GetAtt LambdaRole.Arn
       Events:
         ApiEvent:
@@ -396,7 +397,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
           ASSUMED_ROLE_ARN: !GetAtt AssumedRole.Arn
           TABLE_ARN: !GetAtt UserRoleMappings.Arn
       Role: !GetAtt LambdaRole.Arn
@@ -417,7 +418,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
       Role: !GetAtt LambdaRole.Arn
       Events:
         ApiEvent:
@@ -436,7 +437,7 @@ Resources:
       Environment:
         Variables:
           ALLOWED_ORIGIN: '*'
-          USERS_AND_ROLES_TABLE:  !Ref UsersAndRolesTableName
+          USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
       Role: !GetAtt LambdaRole.Arn
       Events:
         ApiEvent:
