@@ -70,6 +70,7 @@ public class ListByInstitutionHandler extends AuthorizedHandler<Void, UserList> 
         Tag usernameTag = new Tag().withKey("username").withValue(requestInfo.getUsername()
             .orElseThrow(()-> new NotAuthorizedException("missing username")));
         logger.info("Tag:"+usernameTag.toString());
+        logger.info("institution Tag:"+institutionTag.toString());
         return List.of(institutionTag,usernameTag);
     }
 
