@@ -290,24 +290,24 @@ Resources:
                     dynamodb:LeadingKeys:
                       - "USER:${aws:PrincipalTag/username}"
         - PolicyName: IndexAccess
-              PolicyDocument:
-                Version: '2012-10-17'
-                Statement:
-                  - Effect: Allow
-                    Action:
-                      - dynamodb:GetItem
-                      - dynamodb:Scan
-                      - dynamodb:Query
-                      - dynamodb:BatchGetItem
-                      - dynamodb:DescribeTable
-                      - sts:AssumeRole
-                      - sts:TagSession
-                    Resource:
-                      - !Join ["",[!GetAtt UserRoleMappings.Arn, '/index/SearchUsersByInstitution' ]]
-                    Condition:
-                      ForAllValues:StringEquals:
-                        dynamodb:LeadingKeys:
-                          - "${aws:PrincipalTag/institution}"
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - dynamodb:GetItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:DescribeTable
+                  - sts:AssumeRole
+                  - sts:TagSession
+                Resource:
+                  - !Join ["",[!GetAtt UserRoleMappings.Arn, '/index/SearchUsersByInstitution' ]]
+                Condition:
+                 ForAllValues:StringEquals:
+                    dynamodb:LeadingKeys:
+                      - "${aws:PrincipalTag/institution}"
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
