@@ -285,10 +285,10 @@ Resources:
                 Resource:
                   - !GetAtt UserRoleMappings.Arn
                   - "arn:aws:dynamodb:eu-west-1:884807050265:table/orestis-users-table/index/SearchUsersByInstitution"
-                Condition:
-                  ForAllValues:StringEquals:
-                    dynamodb:LeadingKeys:
-                      - "USER:${aws:PrincipalTag/username}"
+#                Condition:
+#                  ForAllValues:StringEquals:
+#                    dynamodb:LeadingKeys:
+#                      - "USER:${aws:PrincipalTag/username}"
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
