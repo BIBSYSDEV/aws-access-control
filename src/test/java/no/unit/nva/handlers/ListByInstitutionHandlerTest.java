@@ -207,6 +207,7 @@ class ListByInstitutionHandlerTest extends HandlerTest {
         return new HandlerRequestBuilder<Void>(JsonUtils.objectMapper)
             .withQueryParameters(queryParams)
             .withFeideId("username")
+            .withCustomerId("SomeCustomer")
             .build();
     }
 }
