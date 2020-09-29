@@ -343,6 +343,37 @@ Resources:
                 #                  - dynamodb:BatchGetItem
                 #                  - dynamodb:DescribeTable
                 Resource: "*"
+  AdminRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      Path: /
+      Policies:
+        - PolicyName: LambdaDefaults
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:PutLogEvents
+                  - sts:AssumeRole
+                  - sts:TagSession
+                  - dynamodb:GetItem
+                  - dynamodb:PutItem
+                  - dynamodb:UpdateItem
+                  - dynamodb:Scan
+                  - dynamodb:Query
+                  - dynamodb:BatchGetItem
+                  - dynamodb:DescribeTable
+                Resource: "*"
   AddRoleHandler:
     Type: AWS::Serverless::Function
     Properties:
@@ -397,7 +428,7 @@ Resources:
         Variables:
           ALLOWED_ORIGIN: '*'
           USERS_AND_ROLES_TABLE: !Ref UsersAndRolesTableName
-      Role: !GetAtt LambdaRole.Arn
+      Role: !GetAtt AdminRole.Arn
       Events:
         ApiEvent:
           Type: Api
