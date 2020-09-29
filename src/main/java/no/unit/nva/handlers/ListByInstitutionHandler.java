@@ -67,6 +67,7 @@ public class ListByInstitutionHandler extends AuthorizedHandler<Void, UserList> 
     protected List<Tag> sessionTags(RequestInfo requestInfo) throws NotAuthorizedException {
         Tag usernameTag = new Tag().withKey("username").withValue(requestInfo.getUsername()
             .orElseThrow(()-> new NotAuthorizedException("missing username")));
+        logger.info("Tag:"+usernameTag.toString());
         return Collections.singletonList(usernameTag);
     }
 
