@@ -78,8 +78,8 @@ public class ListByInstitutionHandler extends AuthorizedHandler<Void, UserList> 
 
     private String extractInstitutionIdFromRequest(RequestInfo requestInfo) {
         return Optional.of(requestInfo)
-            .map(RequestInfo::getPathParameters)
-            .map(pathParams -> pathParams.get(INSTITUTION_ID_PATH_PARAMETER))
+            .map(RequestInfo::getQueryParameters)
+            .map(queryParams -> queryParams.get(INSTITUTION_ID_PATH_PARAMETER))
             .filter(not(String::isBlank))
             .orElseThrow(() -> new IllegalStateException(MISSING_PATH_PARAMETER_ERROR));
     }

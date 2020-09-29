@@ -160,11 +160,11 @@ Resources:
                 responses: { }
                 httpMethod: POST
                 type: aws_proxy
-          /institutions/{institution}/users:
+          /institutions/users:
             get:
               summary: Lists users of specified institution
               parameters:
-                - in: path
+                - in: query
                   name: institution
                   schema:
                     type: string
@@ -498,6 +498,9 @@ Resources:
         ApiEvent:
           Type: Api
           Properties:
-            Path: /institutions/{institution}/users
+            Path: /institutions/users
             Method: get
+            RequestParameters:
+              - method.request.querystring.institution:
+                  Required: true
             RestApiId: !Ref RestApi

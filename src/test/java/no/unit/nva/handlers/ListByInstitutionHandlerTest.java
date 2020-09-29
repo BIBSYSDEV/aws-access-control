@@ -201,11 +201,11 @@ class ListByInstitutionHandlerTest extends HandlerTest {
     }
 
     private InputStream createListRequest(String institutionId) throws JsonProcessingException {
-        Map<String, String> pathParams = Optional.ofNullable(institutionId).map(inst->
+        Map<String, String> queryParams = Optional.ofNullable(institutionId).map(inst->
             Map.of(INSTITUTION_ID_PATH_PARAMETER, inst)).orElse(null);
 
         return new HandlerRequestBuilder<Void>(JsonUtils.objectMapper)
-            .withPathParameters(pathParams)
+            .withQueryParameters(queryParams)
             .withFeideId("username")
             .build();
     }
