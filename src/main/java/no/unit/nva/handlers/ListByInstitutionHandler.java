@@ -65,10 +65,12 @@ public class ListByInstitutionHandler extends AuthorizedHandler<Void, UserList> 
 
     @Override
     protected List<Tag> sessionTags(RequestInfo requestInfo) throws NotAuthorizedException {
+        Tag institutionTag = new Tag().withKey("institution").withValue(requestInfo.getCustomerId()
+        .orElseThrow(()->new NotAuthorizedException("missing institution")));
         Tag usernameTag = new Tag().withKey("username").withValue(requestInfo.getUsername()
             .orElseThrow(()-> new NotAuthorizedException("missing username")));
         logger.info("Tag:"+usernameTag.toString());
-        return Collections.singletonList(usernameTag);
+        return List.of(institutionTag,usernameTag);
     }
 
     @Override
