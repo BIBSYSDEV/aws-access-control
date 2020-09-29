@@ -6,6 +6,7 @@ import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.services.securitytoken.model.Tag;
 import java.util.List;
 import java.util.Optional;
+import no.unit.nva.exceptions.NotAuthorizedException;
 import nva.commons.exceptions.ApiGatewayException;
 import nva.commons.handlers.ApiGatewayHandler;
 import nva.commons.handlers.RequestInfo;
@@ -42,7 +43,7 @@ public abstract class AuthorizedHandler<I, O> extends ApiGatewayHandler<I, O> {
                                       STSAssumeRoleSessionCredentialsProvider credentialsProvider,
                                       Context context) throws ApiGatewayException;
 
-    protected abstract List<Tag> sessionTags(RequestInfo requestInfo);
+    protected abstract List<Tag> sessionTags(RequestInfo requestInfo) throws ApiGatewayException;
 
     protected String assumedRoleArn() {
         return environment.readEnv(ASSUMED_ROLE_ARN_ENV_VAR);

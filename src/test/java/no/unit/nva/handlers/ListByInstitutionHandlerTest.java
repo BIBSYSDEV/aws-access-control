@@ -7,11 +7,17 @@ import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.core.Is.is;
+import static org.hamcrest.core.IsEqual.equalTo;
 import static org.hamcrest.core.IsNot.not;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import com.amazonaws.services.lambda.runtime.Context;
+import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
+import com.amazonaws.services.securitytoken.model.AssumeRoleRequest;
+import com.amazonaws.services.securitytoken.model.AssumeRoleResult;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -20,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import no.unit.nva.exceptions.ConflictException;
 import no.unit.nva.exceptions.InvalidEntryInternalException;
@@ -27,13 +34,17 @@ import no.unit.nva.exceptions.InvalidInputException;
 import no.unit.nva.model.UserDto;
 import no.unit.nva.model.UserList;
 import no.unit.nva.testutils.HandlerRequestBuilder;
+import no.unit.nva.testutils.MockContext;
 import nva.commons.handlers.GatewayResponse;
 import nva.commons.handlers.RequestInfo;
 import nva.commons.utils.JsonUtils;
+import nva.commons.utils.log.LogUtils;
+import nva.commons.utils.log.TestAppender;
 import org.apache.http.HttpStatus;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
+import org.zalando.problem.Problem;
 
 class ListByInstitutionHandlerTest extends HandlerTest {
 
@@ -45,8 +56,18 @@ class ListByInstitutionHandlerTest extends HandlerTest {
     @BeforeEach
     public void init() {
         databaseService = createDatabaseServiceUsingLocalStorage();
-        listByInstitutionHandler = new ListByInstitutionHandler(mockEnvironment(), databaseService);
-        context = mock(Context.class);
+        listByInstitutionHandler = new ListByInstitutionHandler(mockEnvironment(), databaseService,mockStsService());
+        context = new MockContext();
+    }
+
+    private AWSSecurityTokenService mockStsService() {
+        AWSSecurityTokenService sts = mock(AWSSecurityTokenService.class);
+        when(sts.assumeRole(any(AssumeRoleRequest.class))).thenReturn(mockAssumeRole());
+        return sts;
+    }
+
+    private AssumeRoleResult mockAssumeRole() {
+        return new AssumeRoleResult().withCredentials(mockCredentials());
     }
 
     @Test
@@ -108,12 +129,15 @@ class ListByInstitutionHandlerTest extends HandlerTest {
     }
 
     @Test
-    public void processInputThrowsIllegalStateExceptionWhenPathParameterIsMissing() {
-        RequestInfo requestInfo = new RequestInfo();
+    public void processInputThrowsIllegalStateExceptionWhenPathParameterIsMissing() throws IOException {
+        TestAppender appender = LogUtils.getTestingAppender(ListByInstitutionHandler.class);
+        InputStream invalidRequest = createListRequest(null);
 
-        Executable action = () -> listByInstitutionHandler.processInput(null, requestInfo, context);
-        IllegalStateException exception = assertThrows(IllegalStateException.class, action);
-        assertThat(exception.getMessage(), containsString(ListByInstitutionHandler.MISSING_PATH_PARAMETER_ERROR));
+        ByteArrayOutputStream output = sendRequestToHandler(invalidRequest);
+        GatewayResponse<Problem> response= GatewayResponse.fromOutputStream(output);
+        Problem problem  = response.getBodyObject(Problem.class);
+        assertThat(response.getStatusCode(),is(equalTo(HttpStatus.SC_INTERNAL_SERVER_ERROR)));
+        assertThat(appender.getMessages(), containsString(ListByInstitutionHandler.MISSING_PATH_PARAMETER_ERROR));
     }
 
     private void assertThatResponseIsSuccessful(GatewayResponse<UserList> response) {
@@ -177,9 +201,12 @@ class ListByInstitutionHandlerTest extends HandlerTest {
     }
 
     private InputStream createListRequest(String institutionId) throws JsonProcessingException {
-        Map<String, String> pathParams = Map.of(INSTITUTION_ID_PATH_PARAMETER, institutionId);
+        Map<String, String> pathParams = Optional.ofNullable(institutionId).map(inst->
+            Map.of(INSTITUTION_ID_PATH_PARAMETER, inst)).orElse(null);
+
         return new HandlerRequestBuilder<Void>(JsonUtils.objectMapper)
             .withPathParameters(pathParams)
+            .withFeideId("username")
             .build();
     }
 }

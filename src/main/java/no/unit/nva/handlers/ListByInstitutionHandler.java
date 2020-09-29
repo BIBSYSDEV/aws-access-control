@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Optional;
 import no.unit.nva.database.DatabaseService;
 import no.unit.nva.database.DatabaseServiceImpl;
+import no.unit.nva.exceptions.NotAuthorizedException;
 import no.unit.nva.model.UserDto;
 import no.unit.nva.model.UserList;
 import nva.commons.exceptions.ApiGatewayException;
@@ -63,8 +64,9 @@ public class ListByInstitutionHandler extends AuthorizedHandler<Void, UserList> 
     }
 
     @Override
-    protected List<Tag> sessionTags(RequestInfo requestInfo) {
-        Tag usernameTag = new Tag().withKey("username").withValue(requestInfo.getUsername().orElseThrow());
+    protected List<Tag> sessionTags(RequestInfo requestInfo) throws NotAuthorizedException {
+        Tag usernameTag = new Tag().withKey("username").withValue(requestInfo.getUsername()
+            .orElseThrow(()-> new NotAuthorizedException("missing username")));
         return Collections.singletonList(usernameTag);
     }
 
