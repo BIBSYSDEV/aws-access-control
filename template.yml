@@ -284,11 +284,35 @@ Resources:
                   - sts:TagSession
                 Resource:
                   - !GetAtt UserRoleMappings.Arn
-                  - "arn:aws:dynamodb:eu-west-1:884807050265:table/orestis-users-table/index/SearchUsersByInstitution"
-                Condition:
-                  ForAllValues:StringEquals:
-                    dynamodb:LeadingKeys:
-                      - "USER:${aws:PrincipalTag/username}"
+                  - !Sub:
+                      - "${UserRoleMappingsArn}/index/SearchUsersByInstitution"
+                      - {"UserRoleMappingsArn": !GetAtt UserRoleMappings.Arn}
+#                Condition:
+#                  ForAllValues:StringEquals:
+#                    dynamodb:LeadingKeys:
+#                      - "USER:${aws:PrincipalTag/username}"
+#        - PolicyName: IndexAccess
+#              PolicyDocument:
+#                Version: '2012-10-17'
+#                Statement:
+#                  - Effect: Allow
+#                    Action:
+#                      - dynamodb:GetItem
+#                      - dynamodb:PutItem
+#                      - dynamodb:UpdateItem
+#                      - dynamodb:Scan
+#                      - dynamodb:Query
+#                      - dynamodb:BatchGetItem
+#                      - dynamodb:DescribeTable
+#                      - sts:AssumeRole
+#                      - sts:TagSession
+#                    Resource:
+#                      - !GetAtt UserRoleMappings.Arn
+#                      - "arn:aws:dynamodb:eu-west-1:884807050265:table/orestis-users-table/index/SearchUsersByInstitution"
+#                    Condition:
+#                      ForAllValues:StringEquals:
+#                        dynamodb:LeadingKeys:
+#                          - "USER:${aws:PrincipalTag/username}"
   LambdaRole:
     Type: AWS::IAM::Role
     Properties:
