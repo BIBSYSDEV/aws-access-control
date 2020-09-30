@@ -305,7 +305,7 @@ Resources:
                 Resource:
                   - !Join ["",[!GetAtt UserRoleMappings.Arn, '/index/SearchUsersByInstitution' ]]
                 Condition:
-                 ForAllValues:StringEquals:
+                 ForAllValues:StringLike:
                     dynamodb:LeadingKeys:
                       - "${aws:PrincipalTag/institution}"
   LambdaRole:
