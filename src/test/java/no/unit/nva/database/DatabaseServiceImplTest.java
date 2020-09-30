@@ -36,7 +36,10 @@ public class DatabaseServiceImplTest extends DatabaseAccessor {
     public void init() throws InvalidEntryInternalException {
 
         someUser = UserDto.newBuilder().withUsername(SOME_USERNAME).build();
-        databaseService = new DatabaseServiceImpl(c->initializeTestDatabase(),mockCredentialsProvider(), envWithTableName);
+        databaseService = new DatabaseServiceImpl(
+            ignoredCredentials->initializeTestDatabase(),
+            mockCredentialsProvider(),
+            envWithTableName);
     }
 
 
