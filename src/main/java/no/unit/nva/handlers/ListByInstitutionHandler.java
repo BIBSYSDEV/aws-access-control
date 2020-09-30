@@ -16,6 +16,7 @@ import no.unit.nva.exceptions.NotAuthorizedException;
 import no.unit.nva.model.UserDto;
 import no.unit.nva.model.UserList;
 import nva.commons.exceptions.ApiGatewayException;
+import nva.commons.handlers.AuthorizedHandler;
 import nva.commons.handlers.RequestInfo;
 import nva.commons.utils.Environment;
 import nva.commons.utils.JacocoGenerated;

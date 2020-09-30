@@ -12,11 +12,11 @@ repositories {
 final def jacksonVersion = "2.11.2"
 final def jupiterVersion = "5.6.0"
 final def awsSdkVersion = "1.11.852"
-final def nvaCommonsVersion = '3d63c3382ee8'
+final def nvaCommonsVersion = '5f25df23e90b'
 
 dependencies {
 
-    compile group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: awsSdkVersion
+    implementation group: 'com.amazonaws', name: 'aws-java-sdk-sts', version: awsSdkVersion
     implementation(group: 'com.amazonaws', name: 'aws-java-sdk-dynamodb', version: awsSdkVersion) {
         because("This service communicates with dynamo-db directly")
     }
@@ -43,7 +43,7 @@ dependencies {
     implementation(group: 'com.fasterxml.jackson.core', name: 'jackson-core', version: jacksonVersion)
 
 
-    testImplementation group: 'com.github.BIBSYSDEV', name: 'nva-testutils', version: '269498990739'
+    testImplementation group: 'com.github.BIBSYSDEV', name: 'nva-testutils', version: 'db959439b7d354'
     testImplementation group: 'com.amazonaws', name: 'DynamoDBLocal', version: '1.12.0'
     testImplementation group: 'org.mockito', name: 'mockito-core', version: '3.3.3'
     testImplementation group: 'io.cucumber', name: 'cucumber-java', version: '5.6.0'
